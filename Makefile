@@ -31,7 +31,7 @@ clean :
 	- rm ${OBJECTS}
 
 spotless : clean
-	- rm ${EXECBIN} ${LISTING} ${LISTING:.ps=.pdf} test.lis
+	- rm ${EXECBIN}
 
 ${DEPSFILE} :
 	${MKDEPS} ${SOURCES} >${DEPSFILE}
@@ -47,6 +47,4 @@ test : ${EXECBIN}
 	morecat ${SMALLFILES} test.out test.err >test.lis 2>&1
 	rm test.out test.err
 
-lis : test
-	mkpspdf ${LISTING} ${SRCFILES} test.lis
 
