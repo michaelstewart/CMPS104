@@ -1,0 +1,7 @@
+oc
+*.o
+*.deps
+*.str
+*.oc
+*.oh
+*.txt
