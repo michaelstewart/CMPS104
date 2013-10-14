@@ -32,9 +32,6 @@ spotless : clean
 	- rm ${EXECBIN}
 
 ${DEPSFILE} :
-
-	#@ touch ${DEPSFILE}
-	#${MAKE} --no-print-directory deps
 	${MKDEPS} ${SOURCES} >${DEPSFILE}
 
 deps :

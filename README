@@ -1,0 +1,4 @@
+Usage: oc [-ly] [-@ flag] [-D string] program.oc
+
+Input: program.oc file
+Output: stringset dump to program.str

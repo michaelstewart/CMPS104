@@ -16,26 +16,28 @@ const size_t LINESIZE = 1024;
 const string OPT_STRING = "-lyD:@:";
 int option;
 int file_arg_i = 0;
-int opterr = 0;
 
 // Run cpp against the lines of the file.
 void cpplines (FILE *pipe) {
    for (;;) {
       char buffer[LINESIZE];
+      // Read a line in from the pipe.
       char *fgets_rc = fgets (buffer, LINESIZE, pipe);
       if (fgets_rc == NULL) break;
 
+      // Skip the line if it's directive.
       if (*buffer == '#') {
-         // Skip line
          continue;
       }
 
+      // Scan of tokens using strtok_r()
       char *savepos = NULL;
       char *bufptr = buffer;
       for (;;) {
          char *token = strtok_r (bufptr, " \t\n", &savepos);
          bufptr = NULL;
          if (token == NULL) break;
+         // Add the token to the stringset.
          intern_stringset (token);
       }
    }
@@ -69,6 +71,7 @@ int main (int argc, char** argv) {
          case 1:
             // Set the index of the program file
             if (file_arg_i) {
+               // This is run if more than 1 file is passed.
                fprintf(stderr, 
                   "Usage: oc [-ly] [-@ flag] [-D string] program.oc\n");
                set_exitstatus(1);
@@ -79,6 +82,7 @@ int main (int argc, char** argv) {
       }
    }
 
+   // Check that a file was passed to oc.
    if (!file_arg_i) {
       fprintf(stderr, 
          "Usage: oc [-ly] [-@ flag] [-D string] program.oc\n");
@@ -88,6 +92,7 @@ int main (int argc, char** argv) {
    char* filename = argv[file_arg_i];
    char* filebase = basename(filename);
    char* ext = strchr(filebase, '.');
+   // If there is no period in the filename.
    if (ext == NULL) {
       fprintf(stderr, "Error: oc accepts .oc files only \n");
       set_exitstatus(1);
@@ -125,6 +130,7 @@ int main (int argc, char** argv) {
    } else {
       cpplines (pipe);
       if (pclose (pipe) != 0) {
+         // If cpp returns a non-zero code.
          set_exitstatus(1);
       }
    }
