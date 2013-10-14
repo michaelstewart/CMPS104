@@ -49,7 +49,7 @@ int main (int argc, char** argv) {
          case '?':
             fprintf(stderr, 
                "Usage: oc [-ly] [-@ flag] [-D string] program.oc\n");
-            set_exitstatus(2);
+            set_exitstatus(1);
             return get_exitstatus();
             break;
          case 'l':
@@ -71,7 +71,7 @@ int main (int argc, char** argv) {
             if (file_arg_i) {
                fprintf(stderr, 
                   "Usage: oc [-ly] [-@ flag] [-D string] program.oc\n");
-               set_exitstatus(2);
+               set_exitstatus(1);
                return get_exitstatus();
             }
             file_arg_i = optind-1;
@@ -82,7 +82,7 @@ int main (int argc, char** argv) {
    if (!file_arg_i) {
       fprintf(stderr, 
          "Usage: oc [-ly] [-@ flag] [-D string] program.oc\n");
-      set_exitstatus(2);
+      set_exitstatus(1);
       return get_exitstatus();
    }
    char* filename = argv[file_arg_i];
@@ -90,7 +90,7 @@ int main (int argc, char** argv) {
    char* ext = strchr(filebase, '.');
    if (ext == NULL) {
       fprintf(stderr, "Error: oc accepts .oc files only \n");
-      set_exitstatus(3);
+      set_exitstatus(1);
       return get_exitstatus();
    }
    char* program_name = strndup(filebase, ext-filebase);
@@ -107,7 +107,7 @@ int main (int argc, char** argv) {
    // Check file extension
    if (strcmp(ext+1, "oc")) {
       fprintf(stderr, "Error: oc accepts .oc files only \n");
-      set_exitstatus(3);
+      set_exitstatus(1);
       return get_exitstatus();
    }
 
@@ -121,7 +121,7 @@ int main (int argc, char** argv) {
 
    if (pipe == NULL) {
       syserrprintf (command.c_str());
-      set_exitstatus(4);
+      set_exitstatus(1);
    } else {
       cpplines (pipe);
       if (pclose (pipe) != 0) {

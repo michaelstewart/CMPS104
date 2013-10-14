@@ -5,6 +5,8 @@ MKDEPS     = g++ -MM -std=gnu++0x
 
 MKFILE     = Makefile
 DEPSFILE   = Makefile.deps
+NOINCLUDE  = ci clean spotless
+NEEDINCL   = ${filter ${NOINCLUDE}, ${MAKECMDGOALS}}
 SOURCES    = auxlib.cc stringset.cc oc.cc
 HEADERS    = auxlib.h stringset.h
 OBJECTS    = ${SOURCES:.cc=.o}
@@ -30,12 +32,16 @@ spotless : clean
 	- rm ${EXECBIN}
 
 ${DEPSFILE} :
+
+	#@ touch ${DEPSFILE}
+	#${MAKE} --no-print-directory deps
 	${MKDEPS} ${SOURCES} >${DEPSFILE}
 
 deps :
 	- rm ${DEPSFILE}
 	${MAKE} --no-print-directory ${DEPSFILE}
 
-include Makefile.deps
-
+ifeq "${NEEDINCL}" ""
+include ${DEPSFILE}
+endif
 
