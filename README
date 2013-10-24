@@ -5,4 +5,6 @@ Username: mijstewa
 Usage: oc [-ly] [-@ flag] [-D string] program.oc
 
 Input: program.oc file
-Output: stringset dump to program.str
+Output: 
+1. Stringset dump to program.str
+2. List of tokens to program.tok
