@@ -76,6 +76,7 @@ void error_destructor (astree* tree) {
 }
 
 astree* new_parseroot (void) {
+  fprintf(stdout, "THIS BEING RUN\n");
    yyparse_astree = new_astree (TOK_ROOT, 0, 0, 0, "<<ROOT>>");
    return yyparse_astree;
 }
@@ -89,14 +90,12 @@ void scanner_include (void) {
    if (scan_rc != 2) {
       errprintf ("%: %d: [%s]: invalid directive, ignored\n",
                  scan_rc, yytext);
-   }else {
-      printf (";# %d \"%s\"\n", linenr, filename);
+   } else {
+      printf ("# %d \"%s\"\n", linenr, filename);
       scanner_newfilename (filename);
       scan_linenr = linenr - 1;
       DEBUGF ('m', "filename=%s, scan_linenr=%d\n",
               included_filenames.back().c_str(), scan_linenr);
    }
 }
-
-RCSC("$Id: lyutils.cc,v 1.3 2013-10-10 18:17:45-07 - - $")
 
