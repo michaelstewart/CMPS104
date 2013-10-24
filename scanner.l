@@ -9,7 +9,7 @@
 %}
 
 %option 8bit
-%option debug
+%option nodebug
 %option ecs
 %option nodefault
 %option nounput
@@ -20,6 +20,8 @@
 
 LETTER          [A-Za-z_]
 DIGIT           [0-9]
+CHAR            ('([^\\'\n]|\\[\\'"0nt])')
+STRING          (\"([^\\"\n]|\\[\\'"0nt])*\")
 MANTISSA        ({DIGIT}+\.?{DIGIT}*|\.{DIGIT}+)
 EXPONENT        ([Ee][+-]?{DIGIT}+)
 NUMBER          ({MANTISSA}{EXPONENT}?)
@@ -77,6 +79,9 @@ chr             { return yylval_token(TOK_CHR); }
 "/"             { return yylval_token ('/'); }
 "%"             { return yylval_token ('%'); }
 "!"             { return yylval_token ('!'); }
+
+{CHAR}          { return yylval_token (TOK_CHARCON); }
+{STRING}        { return yylval_token (TOK_STRINGCON); }
 
 {NOTIDENT}      { scanner_badtoken (yytext);
                   return yylval_token (TOK_IDENT); }

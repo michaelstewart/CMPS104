@@ -20,6 +20,10 @@ const size_t LINESIZE = 1024;
 const string OPT_STRING = "-lyD:@:";
 int option;
 int file_arg_i = 0;
+extern int scan_linenr;
+extern int scan_offset;
+extern vector<string> included_filenames;
+
 
 // Open a pipe from the C preprocessor.
 // Exit failure if can't.
@@ -40,6 +44,7 @@ void yyin_cpp_pclose (void) {
 }
 
 // Run cpp against the lines of the file.
+/*
 void cpplines (FILE *pipe) {
    for (;;) {
       char buffer[LINESIZE];
@@ -64,10 +69,10 @@ void cpplines (FILE *pipe) {
       }
    }
 }
+*/
 
 int main (int argc, char** argv) {
    set_execname (argv[0]);
-   int parsecode = 0;
    yy_flex_debug = 1;
 
    while ( (option = getopt(argc, argv, OPT_STRING.c_str())) != -1 )  {
@@ -147,14 +152,24 @@ int main (int argc, char** argv) {
    FILE* tok_file = fopen(str_path.c_str(), "w");
 
    yyin_cpp_popen(filename);
-   parsecode = yyparse();
-   printf("PCODE: %d\n", parsecode);
-   if (parsecode) {
-      errprintf ("%:parse failed (%d)\n", parsecode);
-   }else {
-      DEBUGSTMT ('a', dump_astree (stderr, yyparse_astree); );
-   }
+   // parsecode = yyparse();
+   // if (parsecode) {
+   //    errprintf ("%:parse failed (%d)\n", parsecode);
+   // }else {
+   //    DEBUGSTMT ('a', dump_astree (stderr, yyparse_astree); );
+   // }
    // free_ast (yyparse_astree);
+
+   while (yylex() != YYEOF) {
+      // printf("%lu\t%d.%03d\t\n", included_filenames.size(), scan_linenr, scan_offset, get_yytname());
+      // dump_astree(stderr, yylval);
+      // printf("%d\n", yylval->symbol);
+      //%lu\t%lu.%lu\t%lu\t%s\n
+      printf("%lu\t%lu.%03lu\t%d\t%s\t(%s)\n", yylval->filenr, yylval->linenr, yylval->offset,
+           yylval->symbol, get_yytname (yylval->symbol), yylval->lexinfo->c_str());
+   }
+
+   dump_astree(tok_file, yyparse_astree);
    yyin_cpp_pclose();
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
