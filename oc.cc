@@ -146,9 +146,9 @@ int main (int argc, char** argv) {
    }
 
    // Open up the output files.
-   // string str_path = string(program_name) + ".str";
-   // FILE* str_file = fopen(str_path.c_str(), "w");
-   string str_path = string(program_name) + ".tok";
+   string str_path = string(program_name) + ".str";
+   FILE* str_file = fopen(str_path.c_str(), "w");
+   str_path = string(program_name) + ".tok";
    tok_file = fopen(str_path.c_str(), "w");
 
    yyin_cpp_popen(filename);
