@@ -8,3 +8,6 @@ oc
 *.txt
 *.bak
 *.oc
+*.output
+yyparse.*
+yylex.*

@@ -148,12 +148,13 @@ int main (int argc, char** argv) {
 
    yyin_cpp_popen(filename);
    parsecode = yyparse();
+   printf("PCODE: %d\n", parsecode);
    if (parsecode) {
       errprintf ("%:parse failed (%d)\n", parsecode);
    }else {
       DEBUGSTMT ('a', dump_astree (stderr, yyparse_astree); );
    }
-   free_ast (yyparse_astree);
+   // free_ast (yyparse_astree);
    yyin_cpp_pclose();
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
