@@ -9,7 +9,7 @@
 %}
 
 %option 8bit
-%option nodebug
+%option debug
 %option ecs
 %option nodefault
 %option nounput
@@ -56,7 +56,7 @@ chr             { return yylval_token(TOK_CHR); }
 {IDENT}         { return yylval_token (TOK_IDENT); }
 
 
-"[]"            { return yylval_token (TOK_DBR); }
+"[]"            { return yylval_token (TOK_NEWARRAY); }
 "("             { return yylval_token ('('); }
 ")"             { return yylval_token (')'); }
 "["             { return yylval_token ('['); }
