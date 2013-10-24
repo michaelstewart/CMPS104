@@ -165,7 +165,7 @@ int main (int argc, char** argv) {
 
 
    fclose(tok_file);
-   // dump_stringset (str_file);
-   // fclose(str_file);
+   dump_stringset (str_file);
+   fclose(str_file);
    return get_exitstatus();
 }
