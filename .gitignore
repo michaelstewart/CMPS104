@@ -2,6 +2,9 @@ oc
 *.o
 *.deps
 *.str
+*.tok
 *.oc
 *.oh
 *.txt
+*.bak
+*.oc

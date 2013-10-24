@@ -56,7 +56,6 @@ int get_exitstatus (void) {
    return exitstatus;
 }
 
-
 void veprintf (const char* format, va_list args) {
    assert (execname != NULL);
    assert (format != NULL);
@@ -129,5 +128,5 @@ void __debugprintf (char flag, const char* file, int line,
    fflush (NULL);
 }
 
-RCSC("$Id: auxlib.cc,v 1.1 2013-09-20 19:38:26-07 - - $")
+RCSC("$Id: auxlib.cc,v 1.2 2013-10-11 18:56:07-07 - - $")
 

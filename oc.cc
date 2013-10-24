@@ -1,21 +1,43 @@
 #include <string>
+#include <vector>
 using namespace std;
 
+#include <assert.h>
 #include <errno.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wait.h>
+#include <unistd.h>
 
+#include "astree.h"
 #include "auxlib.h"
+#include "lyutils.h"
 #include "stringset.h"
 
 string CPP = "/usr/bin/cpp";
+string yyin_cpp_command;
 const size_t LINESIZE = 1024;
 const string OPT_STRING = "-lyD:@:";
 int option;
 int file_arg_i = 0;
+
+// Open a pipe from the C preprocessor.
+// Exit failure if can't.
+// Assignes opened pipe to FILE* yyin.
+void yyin_cpp_popen (const char* filename) {
+   yyin_cpp_command = CPP + " " + filename;
+   yyin = popen (yyin_cpp_command.c_str(), "r");
+   if (yyin == NULL) {
+      syserrprintf (yyin_cpp_command.c_str());
+      exit (get_exitstatus());
+   }
+}
+
+void yyin_cpp_pclose (void) {
+   int pclose_rc = pclose (yyin);
+   eprint_status (yyin_cpp_command.c_str(), pclose_rc);
+   if (pclose_rc != 0) set_exitstatus (EXIT_FAILURE);
+}
 
 // Run cpp against the lines of the file.
 void cpplines (FILE *pipe) {
@@ -45,6 +67,8 @@ void cpplines (FILE *pipe) {
 
 int main (int argc, char** argv) {
    set_execname (argv[0]);
+   int parsecode = 0;
+   yy_flex_debug = 1;
 
    while ( (option = getopt(argc, argv, OPT_STRING.c_str())) != -1 )  {
       switch(option) {
@@ -56,7 +80,7 @@ int main (int argc, char** argv) {
             break;
          case 'l':
             // enable this when flex is being used.
-            // yy_flex_debug = 1;
+            yy_flex_debug = 1;
             break;
          case 'y':
             // enable this when flex is being used.
@@ -116,26 +140,28 @@ int main (int argc, char** argv) {
       return get_exitstatus();
    }
 
-   // Open up the output file.
-   string str_path = string(program_name) + ".str";
-   FILE* str_file = fopen(str_path.c_str(), "w");
+   // Open up the output files.
+   // string str_path = string(program_name) + ".str";
+   // FILE* str_file = fopen(str_path.c_str(), "w");
+   string str_path = string(program_name) + ".tok";
+   FILE* tok_file = fopen(str_path.c_str(), "w");
 
-   // Open a pipe to cpp
-   string command = CPP + " " + filename;
-   FILE* pipe = popen (command.c_str(), "r");
-
-   if (pipe == NULL) {
-      syserrprintf (command.c_str());
-      set_exitstatus(1);
-   } else {
-      cpplines (pipe);
-      if (pclose (pipe) != 0) {
-         // If cpp returns a non-zero code.
-         set_exitstatus(1);
-      }
+   yyin_cpp_popen(filename);
+   parsecode = yyparse();
+   if (parsecode) {
+      errprintf ("%:parse failed (%d)\n", parsecode);
+   }else {
+      DEBUGSTMT ('a', dump_astree (stderr, yyparse_astree); );
    }
+   free_ast (yyparse_astree);
+   yyin_cpp_pclose();
+   DEBUGSTMT ('s', dump_stringset (stderr); );
+   yylex_destroy();
 
-   dump_stringset (str_file);
-   fclose(str_file);
+
+
+   fclose(tok_file);
+   // dump_stringset (str_file);
+   // fclose(str_file);
    return get_exitstatus();
 }
