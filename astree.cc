@@ -83,9 +83,8 @@ void yyprint (FILE* outfile, unsigned short toknum,
    if (is_defined_token (toknum)) {
       dump_node (outfile, yyvaluep);
    }else {
-      printf("WHY ARE WE HERE\n");
-      fprintf (outfile, "%s(%d)\n",
-               get_yytname (toknum), toknum);
+      // fprintf (outfile, "%s(%d)\n",
+               // get_yytname (toknum), toknum);
    }
    fflush (NULL);
 }
