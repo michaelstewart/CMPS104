@@ -154,11 +154,8 @@ int main (int argc, char** argv) {
    yyin_cpp_popen(filename);
 
    while (yylex() != YYEOF) {
+    continue;
 
-      fprintf(tok_file, "%4lu%4lu.%.03lu%5d  %-16s(%s)\n", 
-         yylval->filenr, yylval->linenr, yylval->offset,
-         yylval->symbol, get_yytname (yylval->symbol), 
-         yylval->lexinfo->c_str());
    }
 
    yyin_cpp_pclose();

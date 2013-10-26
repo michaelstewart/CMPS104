@@ -44,5 +44,4 @@ typedef astree* astree_pointer;
 #define YYSTYPE astree_pointer
 #include "yyparse.h"
 
-RCSH("$Id: lyutils.h,v 1.5 2013-10-10 18:17:45-07 - - $")
 #endif

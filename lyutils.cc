@@ -67,6 +67,7 @@ int yylval_token (int symbol) {
    int offset = scan_offset - yyleng;
    yylval = new_astree (symbol, included_filenames.size() - 1,
                         scan_linenr, offset, yytext);
+   yyprint(tok_file, symbol, yylval);
    return symbol;
 }
 
@@ -77,7 +78,6 @@ void error_destructor (astree* tree) {
 }
 
 astree* new_parseroot (void) {
-  fprintf(stdout, "THIS BEING RUN\n");
    yyparse_astree = new_astree (TOK_ROOT, 0, 0, 0, "<<ROOT>>");
    return yyparse_astree;
 }
