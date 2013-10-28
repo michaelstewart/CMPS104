@@ -39,7 +39,6 @@ void yyin_cpp_popen (const char* filename) {
 
 void yyin_cpp_pclose (void) {
    int pclose_rc = pclose (yyin);
-   eprint_status (yyin_cpp_command.c_str(), pclose_rc);
    if (pclose_rc != 0) set_exitstatus (EXIT_FAILURE);
 }
 
@@ -47,6 +46,7 @@ int main (int argc, char** argv) {
    set_execname (argv[0]);
    yy_flex_debug = 0;
 
+   // Scan options
    while ( (option = getopt(argc, argv, OPT_STRING.c_str())) != -1 )  {
       switch(option) {
          case '?':
@@ -125,15 +125,18 @@ int main (int argc, char** argv) {
 
    yyin_cpp_popen(filename);
 
+   // Call yylex until it reaches EOF
    while (yylex() != YYEOF);
 
    yyin_cpp_pclose();
+
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
 
-
    fclose(tok_file);
+   // Dump the stringset
    dump_stringset (str_file);
    fclose(str_file);
+
    return get_exitstatus();
 }
