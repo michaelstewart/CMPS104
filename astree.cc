@@ -46,7 +46,7 @@ astree* adopt1sym (astree* root, astree* child, int symbol) {
 
 
 static void dump_node (FILE* outfile, astree* node) {
-   fprintf(outfile, "%4lu%4lu.%.03lu%5d  %-16s(%s)\n", 
+   fprintf(outfile, "%4lu%4lu.%.03lu %4d  %-15s (%s)\n", 
      node->filenr, node->linenr, node->offset,
      node->symbol, get_yytname (node->symbol), 
      node->lexinfo->c_str());

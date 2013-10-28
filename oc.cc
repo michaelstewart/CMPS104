@@ -43,34 +43,6 @@ void yyin_cpp_pclose (void) {
    if (pclose_rc != 0) set_exitstatus (EXIT_FAILURE);
 }
 
-// Run cpp against the lines of the file.
-/*
-void cpplines (FILE *pipe) {
-   for (;;) {
-      char buffer[LINESIZE];
-      // Read a line in from the pipe.
-      char *fgets_rc = fgets (buffer, LINESIZE, pipe);
-      if (fgets_rc == NULL) break;
-
-      // Skip the line if it's directive.
-      if (*buffer == '#') {
-         continue;
-      }
-
-      // Scan of tokens using strtok_r()
-      char *savepos = NULL;
-      char *bufptr = buffer;
-      for (;;) {
-         char *token = strtok_r (bufptr, " \t\n", &savepos);
-         bufptr = NULL;
-         if (token == NULL) break;
-         // Add the token to the stringset.
-         intern_stringset (token);
-      }
-   }
-}
-*/
-
 int main (int argc, char** argv) {
    set_execname (argv[0]);
    yy_flex_debug = 0;
@@ -153,10 +125,7 @@ int main (int argc, char** argv) {
 
    yyin_cpp_popen(filename);
 
-   while (yylex() != YYEOF) {
-    continue;
-
-   }
+   while (yylex() != YYEOF);
 
    yyin_cpp_pclose();
    DEBUGSTMT ('s', dump_stringset (stderr); );
