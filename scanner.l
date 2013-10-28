@@ -26,8 +26,8 @@ INTEGER			({DIGIT}+)
 NUMBER          ({INTEGER})
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 NOTIDENT        (({LETTER}|{DIGIT})*)
-NOTCHAR			('([^\\'\n]|\\.))
-NOTSTRING		(\"([^\\"\n]|\\.)*)
+NOTCHAR			('([^\\'\n]|\\.)'?)
+NOTSTRING		(\"([^\\"\n]|\\.)*(\")?)
 
 %%
 
