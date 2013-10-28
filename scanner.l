@@ -22,12 +22,12 @@ LETTER          [A-Za-z_]
 DIGIT           [0-9]
 CHAR            ('([^\\'\n]|\\[\\'"0nt])')
 STRING          (\"([^\\"\n]|\\[\\'"0nt])*\")
-INTEGER			({DIGIT}+)
+INTEGER         ({DIGIT}+)
 NUMBER          ({INTEGER})
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 NOTIDENT        (({LETTER}|{DIGIT})*)
-NOTCHAR			('([^\\'\n]|\\.)'?)
-NOTSTRING		(\"([^\\"\n]|\\.)*(\")?)
+NOTCHAR         ('([^\\'\n]|\\.)'?)
+NOTSTRING       (\"([^\\"\n]|\\.)*(\")?)
 
 %%
 
