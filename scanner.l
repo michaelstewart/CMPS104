@@ -22,12 +22,12 @@ LETTER          [A-Za-z_]
 DIGIT           [0-9]
 CHAR            ('([^\\'\n]|\\[\\'"0nt])')
 STRING          (\"([^\\"\n]|\\[\\'"0nt])*\")
-MANTISSA        ({DIGIT}+\.?{DIGIT}*|\.{DIGIT}+)
-EXPONENT        ([Ee][+-]?{DIGIT}+)
-NUMBER          ({MANTISSA}{EXPONENT}?)
-NOTNUMBER       ({MANTISSA}[Ee][+-]?)
+INTEGER			({DIGIT}+)
+NUMBER          ({INTEGER})
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 NOTIDENT        (({LETTER}|{DIGIT})*)
+NOTCHAR			('([^\\'\n]|\\.))
+NOTSTRING		(\"([^\\"\n]|\\.)*)
 
 %%
 
@@ -55,6 +55,8 @@ chr             { return yylval_token(TOK_CHR); }
 {NUMBER}        { return yylval_token (TOK_INT); }
 {IDENT}         { return yylval_token (TOK_IDENT); }
 
+{CHAR}          { return yylval_token (TOK_CHARCON); }
+{STRING}        { return yylval_token (TOK_STRINGCON); }
 
 "[]"            { return yylval_token (TOK_NEWARRAY); }
 "("             { return yylval_token ('('); }
@@ -80,13 +82,14 @@ chr             { return yylval_token(TOK_CHR); }
 "%"             { return yylval_token ('%'); }
 "!"             { return yylval_token ('!'); }
 
-{CHAR}          { return yylval_token (TOK_CHARCON); }
-{STRING}        { return yylval_token (TOK_STRINGCON); }
 
 {NOTIDENT}      { scanner_badtoken (yytext);
                   return yylval_token (TOK_IDENT); }
-{NOTNUMBER}     { scanner_badtoken (yytext);
-                  return yylval_token (TOK_INT); }
+
+{NOTCHAR}       { scanner_badtoken (yytext);
+                  return yylval_token (TOK_CHARCON); }
+{NOTSTRING}     { scanner_badtoken (yytext);
+                  return yylval_token (TOK_STRINGCON); }
 
 .               { scanner_badchar (*yytext); }
 
