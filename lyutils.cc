@@ -78,8 +78,13 @@ void error_destructor (astree* tree) {
 }
 
 astree* new_parseroot (void) {
-   yyparse_astree = new_astree (TOK_ROOT, 0, 0, 0, "<<ROOT>>");
+   yyparse_astree = new_astree (TOK_ROOT, 0, 0, 0, "program");
    return yyparse_astree;
+}
+
+astree* new_parsenode (const char* type_str) {
+   astree* parsenode = new_astree (TOK_ROOT, 0, 0, 0, type_str);
+   return parsenode;
 }
 
 

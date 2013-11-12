@@ -45,6 +45,7 @@ void yyin_cpp_pclose (void) {
 int main (int argc, char** argv) {
    set_execname (argv[0]);
    yy_flex_debug = 0;
+   yydebug = 0;
 
    // Scan options
    while ( (option = getopt(argc, argv, OPT_STRING.c_str())) != -1 )  {
@@ -56,12 +57,10 @@ int main (int argc, char** argv) {
             return get_exitstatus();
             break;
          case 'l':
-            // enable this when flex is being used.
             yy_flex_debug = 1;
             break;
          case 'y':
-            // enable this when flex is being used.
-            // yydebug = 1;
+            yydebug = 1;
             break;
          case 'D':
             CPP += " -D" + string(optarg);
@@ -122,14 +121,18 @@ int main (int argc, char** argv) {
    FILE* str_file = fopen(str_path.c_str(), "w");
    str_path = string(program_name) + ".tok";
    tok_file = fopen(str_path.c_str(), "w");
+   str_path = string(program_name) + ".ast";
+   FILE* ast_file = fopen(str_path.c_str(), "w");
 
    yyin_cpp_popen(filename);
 
-   // Call yylex until it reaches EOF
-   while (yylex() != YYEOF);
+   // Call yyparse
+   yyparse();
 
    yyin_cpp_pclose();
 
+   dump_astree(ast_file, yyparse_astree);
+   
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
 

@@ -3,6 +3,7 @@ oc
 *.deps
 *.str
 *.tok
+*.ast
 *.oc
 *.oh
 *.txt

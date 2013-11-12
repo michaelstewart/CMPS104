@@ -52,7 +52,7 @@ null            { return yylval_token(TOK_NULL); }
 ord             { return yylval_token(TOK_ORD); }
 chr             { return yylval_token(TOK_CHR); }
 
-{NUMBER}        { return yylval_token (TOK_INT); }
+{NUMBER}        { return yylval_token (TOK_INTCON); }
 {IDENT}         { return yylval_token (TOK_IDENT); }
 
 {CHAR}          { return yylval_token (TOK_CHARCON); }
