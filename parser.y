@@ -76,11 +76,11 @@ opflist   : flist                                             { $$ = $1 }
 flist     : flist ',' decl                                    { free_ast($2); $$ = adopt1 ($1, $3); }
           | decl                                              { $$ = $1; }
           ;
-block     : '{' blist '}'                                     { free_ast2($1, $3); $$ = adopt1(new_parsenode("block"), $2); }
+block     : '{' blist '}'                                     { free_ast2($1, $3); $$ = $2; }
           | ';'                                               { free_ast($1); }
           ;
-blist     : statement blist                                   { $$ = adopt1($1, $2); }
-          |                                                           
+blist     : blist statement                                   { $$ = adopt1($1, $2); }
+          |                                                   { $$ = new_parsenode("block"); }                                             
           ;
 statement : block                                             { $$ = $1; }
           | vardecl                                           { $$ = $1; }
