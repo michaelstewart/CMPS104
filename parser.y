@@ -71,11 +71,11 @@ basetype  : TOK_VOID                                          { $$ = adopt1(new_
           | TOK_IDENT                                         { $$ = adopt1(new_parsenode("basetype"), $1); }
           ;
 function  : type TOK_IDENT '(' ')' block                      { free_ast2($3, $4); $$ = adopt2(new_parsenode("function"), $1, $2); adopt1($$, $5)}
-          | type TOK_IDENT '(' flist ')' block                { free_ast2($3, $5); $$ = adopt2(new_parsenode("function"), $1, $2); adopt2($$, $4, $6)}
+          | type TOK_IDENT '(' parameters ')' block           { free_ast2($3, $5); $$ = adopt2(new_parsenode("function"), $1, $2); adopt2($$, $4, $6)}
           ;
           ;
-flist     : flist ',' decl                                    { free_ast($2); $$ = adopt1 ($1, $3); }
-          | decl                                              { $$ = adopt1(new_parsenode("flist"), $1); }
+parameters: parameters ',' decl                               { free_ast($2); $$ = adopt1 ($1, $3); }
+          | decl                                              { $$ = adopt1(new_parsenode("parameters"), $1); }
           ;
 block     : '{' blist '}'                                     { free_ast2($1, $3); $$ = $2; }
           | ';'                                               { free_ast($1); $$ = new_parsenode("block"); }
