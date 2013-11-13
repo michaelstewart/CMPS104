@@ -34,6 +34,7 @@ astree* new_parsenode (const char* type_str);
 
 %destructor { error_destructor ($$); } <>
 
+%right  TOK_IF TOK_ELSE
 %right  '='
 %left   TOK_EQ TOK_NE TOK_LT TOK_LE TOK_GT TOK_GE
 %left   '+' '-'
@@ -53,10 +54,10 @@ program   : program structdef                                 { $$ = adopt1 ($1,
           |                                                   { $$ = new_parseroot(); }
           ;
 
-structdef : TOK_STRUCT TOK_IDENT '{' slist '}'                { free_ast2($3, $5); $$ = adopt2 ($1, $2, $4); }
+structdef : TOK_STRUCT TOK_IDENT '{' members '}'              { free_ast2($3, $5); $$ = adopt2 ($1, $2, $4); }
           ;
-slist     : slist decl ';'                                    { free_ast($3); $$ = adopt1 ($1, $2); }
-          |
+members   : members decl ';'                                  { free_ast($3); $$ = adopt1 ($1, $2); }
+          |                                                   { $$ = new_parsenode("members"); }
           ;
 decl      : type TOK_IDENT                                    { $$ = adopt1 ($1, $2); }
           ;
@@ -73,7 +74,6 @@ basetype  : TOK_VOID                                          { $$ = adopt1(new_
 function  : type TOK_IDENT '(' ')' block                      { free_ast2($3, $4); $$ = adopt2(new_parsenode("function"), $1, $2); adopt1($$, $5)}
           | type TOK_IDENT '(' parameters ')' block           { free_ast2($3, $5); $$ = adopt2(new_parsenode("function"), $1, $2); adopt2($$, $4, $6)}
           ;
-          ;
 parameters: parameters ',' decl                               { free_ast($2); $$ = adopt1 ($1, $3); }
           | decl                                              { $$ = adopt1(new_parsenode("parameters"), $1); }
           ;
@@ -81,7 +81,7 @@ block     : '{' blist '}'                                     { free_ast2($1, $3
           | ';'                                               { free_ast($1); $$ = new_parsenode("block"); }
           ;
 blist     : blist statement                                   { $$ = adopt1($1, $2); }
-          |                                                   { $$ = new_parsenode("block"); }                                             
+          |                                                   { $$ = new_parsenode("block"); }                                        
           ;
 statement : block                                             { $$ = $1; }
           | vardecl                                           { $$ = $1; }
@@ -128,8 +128,9 @@ unop      : '+' expr %prec POS                                { $$ = adopt2(new_
           | TOK_ORD expr                                      { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           | TOK_CHR expr                                      { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           ;
-allocator : TOK_NEW basetype '(' expr ')'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $3); }
-          | TOK_NEW basetype '[' expr ']'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $3); }
+allocator : TOK_NEW basetype '(' ')'                          { free_ast2($3, $4); $$ = adopt1(new_parsenode("allocator"), $2); }
+          | TOK_NEW basetype '(' expr ')'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $4); }
+          | TOK_NEW basetype '[' expr ']'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $4); }
           ;
 call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode("call"), $1); }
           ;
