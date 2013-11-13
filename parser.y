@@ -95,7 +95,7 @@ vardecl   : type TOK_IDENT '=' expr ';'                       { free_ast2 ($3, $
 while     : TOK_WHILE '(' expr ')' statement                  { free_ast($1); free_ast2($2, $4); $$ = adopt2(new_parsenode("while"), $3, $5); }
           ;          
 ifelse    : TOK_IF '(' expr ')' statement TOK_ELSE statement  { $$ = adopt2(new_parsenode("ifelse"), $3, $5); adopt1($$, $7); free_ast2($1, $2); free_ast2 ($4, $6); }
-          | TOK_IF '(' expr ')' statement %prec "then"        { $$ = adopt2(new_parsenode("if"), $3, $5); free_ast($1); free_ast2 ($2, $4); }
+          | TOK_IF '(' expr ')' statement %prec "then"        { $$ = adopt2(new_parsenode("ifelse"), $3, $5); free_ast($1); free_ast2 ($2, $4); }
           ;
 return    : TOK_RETURN ';'                                    { free_ast2 ($1, $2); $$ = new_parsenode("return"); }
           | TOK_RETURN expr ';'                               { free_ast2 ($1, $3); $$ = adopt1(new_parsenode("return"), $2); }
