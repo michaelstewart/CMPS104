@@ -34,7 +34,7 @@ astree* new_parsenode (const char* type_str);
 
 %destructor { error_destructor ($$); } <>
 
-%right  TOK_IF TOK_ELSE
+%right "then" TOK_ELSE
 %right  '='
 %left   TOK_EQ TOK_NE TOK_LT TOK_LE TOK_GT TOK_GE
 %left   '+' '-'
@@ -88,15 +88,14 @@ statement : block                                             { $$ = $1; }
           | while                                             { $$ = $1; }
           | ifelse                                            { $$ = $1; }
           | return                                            { $$ = $1; }
-          | expr ';'                                          { $$ = $1; }
+          | expr ';'                                          { $$ = $1; free_ast($2); }
           ;
 vardecl   : type TOK_IDENT '=' expr ';'                       { free_ast2 ($3, $5); $$ = adopt2(new_parsenode("vardecl"),$1, $2); adopt1($$, $4); }  
           ;
 while     : TOK_WHILE '(' expr ')' statement                  { free_ast($1); free_ast2($2, $4); $$ = adopt2(new_parsenode("while"), $3, $5); }
           ;          
-ifelse    : TOK_IF '(' expr ')' statement TOK_ELSE statement  { free_ast2 ($2, $4); $$ = adopt2 ($1, $3, $5); }
-          | TOK_IF '(' expr ')' statement                     { free_ast2 ($2, $4); $$ = adopt2 ($1, $3, $5); }
-
+ifelse    : TOK_IF '(' expr ')' statement TOK_ELSE statement  { $$ = adopt2(new_parsenode("ifelse"), $3, $5); adopt1($$, $7); free_ast2($1, $2); free_ast2 ($4, $6); }
+          | TOK_IF '(' expr ')' statement %prec "then"        { $$ = adopt2(new_parsenode("if"), $3, $5); free_ast($1); free_ast2 ($2, $4); }
           ;
 return    : TOK_RETURN ';'                                    { free_ast2 ($1, $2); $$ = new_parsenode("return"); }
           | TOK_RETURN expr ';'                               { free_ast2 ($1, $3); $$ = adopt1(new_parsenode("return"), $2); }
@@ -128,20 +127,19 @@ unop      : '+' expr %prec POS                                { $$ = adopt2(new_
           | TOK_ORD expr                                      { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           | TOK_CHR expr                                      { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           ;
-allocator : TOK_NEW basetype '(' ')'                          { free_ast2($3, $4); $$ = adopt1(new_parsenode("allocator"), $2); }
-          | TOK_NEW basetype '(' expr ')'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $4); }
-          | TOK_NEW basetype '[' expr ']'                     { free_ast2($3, $5); $$ = adopt2(new_parsenode("allocator"), $2, $4); }
+allocator : TOK_NEW basetype '(' ')'                          { $$ = adopt1(new_parsenode("allocator"), $2); free_ast($1); free_ast2($3, $4); }
+          | TOK_NEW basetype '(' expr ')'                     { $$ = adopt2(new_parsenode("allocator"), $2, $4); free_ast($1); free_ast2($3, $5);  }
+          | TOK_NEW basetype '[' expr ']'                     { $$ = adopt2(new_parsenode("allocator"), $2, $4); free_ast($1); free_ast2($3, $5); }
           ;
-call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode("call"), $1); }
-          ;
-call      : TOK_IDENT '(' clist ')'                           { $$ = adopt1($3, $1); }
+call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode("call"), $1); free_ast2($2, $3); }
+          | TOK_IDENT '(' clist ')'                           { $$ = adopt1($3, $1); free_ast2($2, $4); }
           ;
 clist     : expr                                              { $$ = adopt1(new_parsenode("call"), $1); }
-          | expr ',' clist                                    { $$ = adopt1($1, $3); }
+          | expr ',' clist                                    { $$ = adopt1($1, $3); free_ast($2);}
           ;
 variable  : TOK_IDENT                                         { $$ = adopt1(new_parsenode("variable"), $1); }
-          | expr '[' expr ']'   
-          | expr '.' TOK_IDENT  
+          | expr '[' expr ']'                                 { $$ = adopt1(adopt1(adopt1(new_parsenode("variable"), $1), $2), $3); free_ast($4); }
+          | expr '.' TOK_IDENT                                { $$ = adopt1(adopt1(adopt1(new_parsenode("variable"), $1), $2), $3); }
           ;
 constant  : TOK_INTCON                                        { $$ = adopt1(new_parsenode("constant"), $1); }
           | TOK_CHARCON                                       { $$ = adopt1(new_parsenode("constant"), $1); }
