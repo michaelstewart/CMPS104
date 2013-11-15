@@ -112,10 +112,10 @@ binop     : expr '=' expr                                     { $$ = new_parseno
           | expr TOK_LE expr                                  { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr TOK_GT expr                                  { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr TOK_GE expr                                  { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
-          | expr '+' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
-          | expr '-' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr '*' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr '/' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
+          | expr '+' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
+          | expr '-' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr '%' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           ;
 unop      : '+' expr %prec POS                                { $$ = adopt2(new_parsenode("unop"), $1, $2); /*$$ = adopt1sym ($1, $2, POS);*/ }
