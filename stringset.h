@@ -9,7 +9,7 @@ using namespace std;
 
 #include <stdio.h>
 
-const string* intern_stringset (const char*);
+const string* intern_stringset (const char* string, bool no_insert);
 
 void dump_stringset (FILE*);
 

@@ -17,15 +17,24 @@ astree* new_astree (int symbol, int filenr, int linenr,
    tree->filenr = filenr;
    tree->linenr = linenr;
    tree->offset = offset;
-   tree->lexinfo = intern_stringset (lexinfo);
+   tree->lexinfo = intern_stringset (lexinfo, (TOK_ROOT == symbol));
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());
    return tree;
 }
 
+
 astree* adopt1 (astree* root, astree* child) {
    root->children.push_back (child);
+   DEBUGF ('a', "%p (%s) adopting %p (%s)\n",
+           root, root->lexinfo->c_str(),
+           child, child->lexinfo->c_str());
+   return root;
+}
+
+astree* adopt_front (astree* root, astree* child) {
+   root->children.insert(root->children.begin(), child);
    DEBUGF ('a', "%p (%s) adopting %p (%s)\n",
            root, root->lexinfo->c_str(),
            child, child->lexinfo->c_str());

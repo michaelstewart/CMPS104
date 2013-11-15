@@ -10,10 +10,16 @@ typedef stringset::const_iterator stringset_citor;
 typedef stringset::const_local_iterator stringset_bucket_citor;
 
 stringset set;
+stringset set_internal;
 
-const string* intern_stringset (const char* string) {
-   pair<stringset_citor,bool> handle = set.insert (string);
-   return &*handle.first;
+const string* intern_stringset (const char* string, bool no_insert) {
+   if (no_insert) {
+      pair<stringset_citor,bool> handle = set_internal.insert (string);
+      return &*handle.first;
+   } else {
+      pair<stringset_citor,bool> handle = set.insert (string);
+      return &*handle.first;
+   }
 }
 
 void dump_stringset (FILE* out) {

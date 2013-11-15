@@ -20,6 +20,7 @@ struct astree {
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo);
 astree* adopt1 (astree* root, astree* child);
+astree* adopt_front (astree* root, astree* child);
 astree* adopt2 (astree* root, astree* left, astree* right);
 astree* adopt1sym (astree* root, astree* child, int symbol);
 void dump_astree (FILE* outfile, astree* root);
