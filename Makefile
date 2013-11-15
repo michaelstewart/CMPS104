@@ -67,7 +67,7 @@ ${CLGEN} : ${LSOURCES}
 # Build the parser.
 #
 ${CYGEN} ${HYGEN} : ${YSOURCES}
-	bison --report=state --defines=${HYGEN} --output=${CYGEN} ${YSOURCES}
+	bison --defines=${HYGEN} --output=${CYGEN} ${YSOURCES}
 
 #
 # Check sources into a git repo.
@@ -110,9 +110,6 @@ ${DEPSFILE} :
 #
 # Test
 #
-test : ${EXECBIN}
-	oc ../oc_test/test.oc
-	less test.ast
 
 tests : ${EXECBIN}
 	touch ${TESTINS}
