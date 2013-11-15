@@ -10,9 +10,6 @@
 #define YYDEBUG 1
 #define YYERROR_VERBOSE 1
 #define YYPRINT yyprint
-#define TTMALLOC yycalloc
-
-astree* new_parsenode (const char* type_str);
 
 %}
 
@@ -132,7 +129,7 @@ allocator : TOK_NEW basetype '(' ')'                          { $$ = adopt1(new_
           | TOK_NEW basetype '[' expr ']'                     { $$ = adopt2(new_parsenode("allocator"), $2, $4); free_ast($1); free_ast2($3, $5); }
           ;
 call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode("call"), $1); free_ast2($2, $3); }
-          | TOK_IDENT '(' clist ')'                           { $$ = adopt1($3, $1); free_ast2($2, $4); }
+          | TOK_IDENT '(' clist ')'                           { $$ = adopt_front($3, $1); free_ast2($2, $4); }
           ;
 clist     : expr                                              { $$ = adopt1(new_parsenode("call"), $1); }
           | expr ',' clist                                    { $$ = adopt1($1, $3); free_ast($2);}
@@ -161,12 +158,3 @@ const char *get_yytname (int symbol) {
 bool is_defined_token (int symbol) {
    return YYTRANSLATE (symbol) > YYUNDEFTOK;
 }
-
-/*
-static void* yycalloc (size_t size) {
-   void* result = calloc (1, size);
-   assert (result != NULL);
-   return result;
-}
-*/
-
