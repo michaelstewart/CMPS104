@@ -118,7 +118,7 @@ binop     : expr '=' expr                                     { $$ = new_parseno
           | expr '-' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           | expr '%' expr                                     { $$ = new_parsenode("binop"); adopt2($$, $1, $2); adopt1($$, $3); }
           ;
-unop      : '+' expr %prec POS                                { $$ = adopt2(new_parsenode("unop"), $1, $2); /*$$ = adopt1sym ($1, $2, POS);*/ }
+unop      : '+' expr %prec POS                                { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           | '-' expr %prec NEG                                { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           | '!' expr                                          { $$ = adopt2(new_parsenode("unop"), $1, $2); }
           | TOK_ORD expr                                      { $$ = adopt2(new_parsenode("unop"), $1, $2); }
@@ -129,10 +129,10 @@ allocator : TOK_NEW basetype '(' ')'                          { $$ = adopt1(new_
           | TOK_NEW basetype '[' expr ']'                     { $$ = adopt2(new_parsenode("allocator"), $2, $4); free_ast($1); free_ast2($3, $5); }
           ;
 call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode("call"), $1); free_ast2($2, $3); }
-          | TOK_IDENT '(' clist ')'                           { $$ = adopt_front($3, $1); free_ast2($2, $4); }
+          | TOK_IDENT '(' clist ')'                           { $$ = adopt2(new_parsenode("call"), $1, $3); free_ast2($2, $4); }
           ;
-clist     : expr                                              { $$ = adopt1(new_parsenode("call"), $1); }
-          | expr ',' clist                                    { $$ = adopt1($1, $3); free_ast($2);}
+clist     : expr                                              { $$ = adopt1(new_parsenode("args"), $1); }
+          | clist ',' expr                                    { $$ = adopt1($1, $3); free_ast($2); }
           ;
 variable  : TOK_IDENT                                         { $$ = adopt1(new_parsenode("variable"), $1); }
           | expr '[' expr ']'                                 { $$ = adopt1(adopt1(adopt1(new_parsenode("variable"), $1), $2), $3); free_ast($4); }
@@ -145,7 +145,6 @@ constant  : TOK_INTCON                                        { $$ = adopt1(new_
           | TOK_TRUE                                          { $$ = adopt1(new_parsenode("constant"), $1); }
           | TOK_NULL                                          { $$ = adopt1(new_parsenode("constant"), $1); }
           ;
-
 
 %%
 
