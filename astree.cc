@@ -39,8 +39,6 @@ astree* new_astree (int symbol, const char* lexinfo) {
 
 /* Traversal Functions */
 
-string create
-
 void preCase(astree* root) {
   switch(root->symbol) {
     case BLOCK: {
