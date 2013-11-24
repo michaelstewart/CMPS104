@@ -39,20 +39,52 @@ astree* new_astree (int symbol, const char* lexinfo) {
 
 /* Traversal Functions */
 
+string create
+
 void preCase(astree* root) {
   switch(root->symbol) {
-    case BLOCK:
+    case BLOCK: {
       table = table->enterBlock();
-    case VARDECL:
+      break;
+    }
+    case VARDECL: {
       // printf("T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
       table->addSymbol(*root->children[1]->lexinfo, 
         *root->children[0]->children[0]->children[0]->lexinfo);
       break;
-    case VARIABLE:
+    }
+    case DECL: {
+      table->addSymbol(*root->children[1]->lexinfo, 
+        *root->children[0]->children[0]->children[0]->lexinfo);
+      break;
+    }
+    case VARIABLE: {
       if (root->children[0]->symbol == TOK_IDENT) {
         table->lookup(*root->children[0]->lexinfo);
       }
       break;
+    }
+    case FUNCTION: {
+      string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
+      string parameters = "(";
+      for(size_t i = 0; i < root->children[2]->children.size(); i++) {
+        if (i) parameters += ',';
+        if (root->children[2]->children[i]->symbol == DECL) {
+          parameters += *root->children[2]->children[i]->children[0]->children[0]->children[0]->lexinfo;
+        }        
+      }
+      parameters += string(")");
+
+      table = table->enterFunction(*root->children[1]->lexinfo, return_type + parameters);
+      break;
+    }
+    case CALL: {
+      if (root->children[0]->symbol == TOK_IDENT) {
+        // printf("%s\n", table->lookup(*root->children[0]->lexinfo).c_str());
+        table->lookup(*root->children[0]->lexinfo);
+      }
+      break;
+    }
   }
 }
 
@@ -61,11 +93,14 @@ void postCase(astree* root) {
     case BLOCK:
       table = table->leaveBlock();
       break;
+    case FUNCTION:
+      table = table->leaveBlock();
+      break;
   }
 }
 
 void preorderTraversal(astree* root) {
-  // printf("%s %d\n", root->lexinfo->c_str(), root->symbol);
+  // fprintf(stderr, "%s %d\n", root->lexinfo->c_str(), root->symbol);
   preCase(root);
   for(size_t i = 0; i < root->children.size(); i++) {
     preorderTraversal(root->children[i]);

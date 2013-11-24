@@ -60,7 +60,7 @@ structdef : TOK_STRUCT TOK_IDENT '{' members '}'              { free_ast2($3, $5
 members   : members decl ';'                                  { free_ast($3); $$ = adopt1 ($1, $2); }
           |                                                   { $$ = new_parsenode(MEMBERS, "members"); }
           ;
-decl      : type TOK_IDENT                                    { $$ = adopt1 ($1, $2); }
+decl      : type TOK_IDENT                                    { $$ = adopt2(new_parsenode(DECL, "decl"), $1, $2); }
           ;
 type      : basetype                                          { $$ = adopt1(new_parsenode(TYPE, "type"), $1); }
           | basetype TOK_NEWARRAY                             { $$ = adopt2(new_parsenode(TYPE, "type"), $1, $2); }
