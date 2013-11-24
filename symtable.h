@@ -41,6 +41,8 @@ public:
   // Creates a new empty table beneath the current table and returns it.
   SymbolTable* enterBlock();
 
+  SymbolTable* leaveBlock();
+
   // Adds the function name as symbol to the current table
   // and creates a new empty table beneath the current one.
   //
@@ -76,6 +78,7 @@ public:
   // Running id number for symbol tables
   static int N;
 
+  
   // Parses a function signature and returns all types as vector.
   // The first element of the vector is always the return type.
   //
@@ -83,5 +86,7 @@ public:
   //          returns ["void", "int", "int"]
   static vector<string> parseSignature(string signature);
 };
+
+extern SymbolTable *table;
 
 #endif

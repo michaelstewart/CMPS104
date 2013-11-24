@@ -1,6 +1,8 @@
 #include "auxlib.h"
 #include "symtable.h"
 
+SymbolTable *table = new SymbolTable(NULL);
+
 // Creates and returns a new symbol table.
 //
 // Use "new SymbolTable(NULL)" to create the global table
@@ -23,6 +25,11 @@ SymbolTable* SymbolTable::enterBlock() {
   this->subscopes[buffer] = child;
   // Return the newly created symbol table
   return child;
+}
+
+// Returns parent table
+SymbolTable* SymbolTable::leaveBlock() {
+  return this->parent;
 }
 
 // Adds the function name as symbol to the current table

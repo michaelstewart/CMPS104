@@ -1,4 +1,3 @@
-
 #include <vector>
 #include <string>
 using namespace std;
@@ -78,16 +77,16 @@ void error_destructor (astree* tree) {
 }
 
 astree* new_parseroot (void) {
-   yyparse_astree = new_astree (TOK_ROOT, 0, 0, 0, "program");
+   yyparse_astree = new_astree(TOK_ROOT, "program");
    return yyparse_astree;
 }
 
-astree* new_parsenode (const char* type_str) {
-   astree* parsenode = new_astree (TOK_ROOT, 0, 0, 0, type_str);
+astree* new_parsenode (int tok_type, const char* type_str) {
+   astree* parsenode = new_astree(tok_type, type_str);
    return parsenode;
 }
 
-
+
 void scanner_include (void) {
    scanner_newline();
    char filename[strlen (yytext) + 1];

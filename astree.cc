@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,9 @@
 #include "astree.h"
 #include "stringset.h"
 #include "lyutils.h"
+#include "symtable.h"
+
+using namespace std;
 
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo) {
@@ -16,12 +20,61 @@ astree* new_astree (int symbol, int filenr, int linenr,
    tree->filenr = filenr;
    tree->linenr = linenr;
    tree->offset = offset;
-   tree->lexinfo = intern_stringset (lexinfo, (TOK_ROOT == symbol));
+   tree->lexinfo = intern_stringset (lexinfo, false);
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());
    return tree;
 }
+
+astree* new_astree (int symbol, const char* lexinfo) {
+   astree* tree = new astree();
+   tree->symbol = symbol;
+   tree->lexinfo = intern_stringset (lexinfo, true);
+   DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
+           tree, tree->filenr, tree->linenr, tree->offset,
+           get_yytname (tree->symbol), tree->lexinfo->c_str());
+   return tree;
+}
+
+/* Traversal Functions */
+
+void preCase(astree* root) {
+  switch(root->symbol) {
+    case BLOCK:
+      table = table->enterBlock();
+    case VARDECL:
+      // printf("T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
+      table->addSymbol(*root->children[1]->lexinfo, 
+        *root->children[0]->children[0]->children[0]->lexinfo);
+      break;
+    case VARIABLE:
+      if (root->children[0]->symbol == TOK_IDENT) {
+        table->lookup(*root->children[0]->lexinfo);
+      }
+      break;
+  }
+}
+
+void postCase(astree* root) {
+  switch(root->symbol) {
+    case BLOCK:
+      table = table->leaveBlock();
+      break;
+  }
+}
+
+void preorderTraversal(astree* root) {
+  // printf("%s %d\n", root->lexinfo->c_str(), root->symbol);
+  preCase(root);
+  for(size_t i = 0; i < root->children.size(); i++) {
+    preorderTraversal(root->children[i]);
+  }
+  postCase(root);
+
+}
+
+/* Traversal Functions */
 
 
 astree* adopt1 (astree* root, astree* child) {

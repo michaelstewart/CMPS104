@@ -13,6 +13,7 @@ using namespace std;
 #include "auxlib.h"
 #include "lyutils.h"
 #include "stringset.h"
+#include "symtable.h"
 
 string CPP = "/usr/bin/cpp";
 string yyin_cpp_command;
@@ -126,17 +127,21 @@ int main (int argc, char** argv) {
 
    yyin_cpp_popen(filename);
 
-   // Call yyparse
    yyparse();
 
    yyin_cpp_pclose();
 
    dump_astree(ast_file, yyparse_astree);
+
+   preorderTraversal(yyparse_astree);
+
+   printf("==================\n");
+   table->dump(stdout, 0);
    
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
-
    fclose(tok_file);
+
    // Dump the stringset
    dump_stringset (str_file);
    fclose(str_file);
