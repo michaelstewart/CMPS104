@@ -87,6 +87,7 @@ public:
   static vector<string> parseSignature(string signature);
 };
 
-extern SymbolTable *table;
+extern SymbolTable *current_table;
+extern SymbolTable *global_table;
 
 #endif

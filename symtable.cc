@@ -1,7 +1,9 @@
 #include "auxlib.h"
 #include "symtable.h"
 
-SymbolTable *table = new SymbolTable(NULL);
+SymbolTable *global_table = new SymbolTable(NULL);
+SymbolTable *current_table = global_table;
+
 
 // Creates and returns a new symbol table.
 //

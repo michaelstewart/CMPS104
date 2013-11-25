@@ -13,6 +13,7 @@ struct astree {
    size_t linenr;            // line number from source code
    size_t offset;            // offset of token with current line
    const string* lexinfo;    // pointer to lexical information
+   string type;    	 // type information
    vector<astree*> children; // children of this n-way node
 };
 
@@ -20,7 +21,8 @@ struct astree {
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo);
 astree* new_astree (int symbol, const char* lexinfo);
-void preorderTraversal(astree* root);
+void build_table_traversal(astree* root);
+void type_check_traversal(astree* root);
 astree* adopt1 (astree* root, astree* child);
 astree* adopt_front (astree* root, astree* child);
 astree* adopt2 (astree* root, astree* left, astree* right);

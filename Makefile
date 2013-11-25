@@ -108,8 +108,8 @@ ${DEPSFILE} :
 	${MAKE} --no-print-directory deps
 
 #
-# Test
-#
+test : ${EXECBIN}
+	oc ../oc_test/test.oc
 
 tests : ${EXECBIN}
 	touch ${TESTINS}

@@ -16,6 +16,7 @@ using namespace std;
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo) {
    astree* tree = new astree();
+   tree->type = string("");
    tree->symbol = symbol;
    tree->filenr = filenr;
    tree->linenr = linenr;
@@ -29,6 +30,7 @@ astree* new_astree (int symbol, int filenr, int linenr,
 
 astree* new_astree (int symbol, const char* lexinfo) {
    astree* tree = new astree();
+   tree->type = string("");
    tree->symbol = symbol;
    tree->lexinfo = intern_stringset (lexinfo, true);
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
@@ -39,27 +41,55 @@ astree* new_astree (int symbol, const char* lexinfo) {
 
 /* Traversal Functions */
 
-void preCase(astree* root) {
+string tok_const_type(int sym) {
+  switch(sym) {
+    case TOK_INTCON:
+      return string("int");
+    case TOK_CHARCON:
+      return string("char");
+    case TOK_STRINGCON:
+      return string("string");
+    case TOK_FALSE:
+      return string("bool");
+    case TOK_TRUE:
+      return string("bool");
+    case TOK_NULL:
+      return string("null");
+  }
+  return string("");
+}
+
+void table_pre_case(astree* root) {
   switch(root->symbol) {
     case BLOCK: {
-      table = table->enterBlock();
+      // printf("%s\n", (*root->children[0]->lexinfo).c_str());
+      current_table = current_table->enterBlock();
       break;
     }
     case VARDECL: {
       // printf("T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
-      table->addSymbol(*root->children[1]->lexinfo, 
+      current_table->addSymbol(*root->children[1]->lexinfo, 
         *root->children[0]->children[0]->children[0]->lexinfo);
       break;
     }
     case DECL: {
-      table->addSymbol(*root->children[1]->lexinfo, 
+      current_table->addSymbol(*root->children[1]->lexinfo, 
         *root->children[0]->children[0]->children[0]->lexinfo);
       break;
     }
     case VARIABLE: {
       if (root->children[0]->symbol == TOK_IDENT) {
-        table->lookup(*root->children[0]->lexinfo);
+        root->children[0]->type = current_table->lookup(*root->children[0]->lexinfo);
+        root->type = root->children[0]->type;
       }
+      break;
+    }
+    case CONSTANT: {
+      root->children[0]->type = tok_const_type(root->children[0]->symbol);
+      root->type = root->children[0]->type;
+      break;
+    }
+    case TYPE: {
       break;
     }
     case FUNCTION: {
@@ -73,38 +103,186 @@ void preCase(astree* root) {
       }
       parameters += string(")");
 
-      table = table->enterFunction(*root->children[1]->lexinfo, return_type + parameters);
+      current_table = current_table->enterFunction(*root->children[1]->lexinfo, return_type + parameters);
       break;
     }
     case CALL: {
       if (root->children[0]->symbol == TOK_IDENT) {
-        // printf("%s\n", table->lookup(*root->children[0]->lexinfo).c_str());
-        table->lookup(*root->children[0]->lexinfo);
+        // printf("%s\n", current_table->lookup(*root->children[0]->lexinfo).c_str());
+        current_table->lookup(*root->children[0]->lexinfo);
       }
       break;
     }
   }
 }
 
-void postCase(astree* root) {
-  switch(root->symbol) {
-    case BLOCK:
-      table = table->leaveBlock();
-      break;
+void table_post_case(astree* root) {
+  switch (root->symbol) {
     case FUNCTION:
-      table = table->leaveBlock();
+      current_table = current_table->leaveBlock();
+      break;
+    case BLOCK:
+      current_table = current_table->leaveBlock();
       break;
   }
 }
 
-void preorderTraversal(astree* root) {
+void build_table_traversal(astree* root) {
   // fprintf(stderr, "%s %d\n", root->lexinfo->c_str(), root->symbol);
-  preCase(root);
+  table_pre_case(root);
   for(size_t i = 0; i < root->children.size(); i++) {
-    preorderTraversal(root->children[i]);
+    build_table_traversal(root->children[i]);
   }
-  postCase(root);
+  table_post_case(root);
 
+}
+
+
+// void type_pre_case(astree* root) {
+//   switch(root->symbol) {
+//     case VARIABLE: {
+//       if (root->children[0]->symbol == TOK_IDENT) {
+//         root->children[0]->type = lookup(*root->children[0]->lexinfo);
+//         root->type = root->children[0]->type;
+//       }
+//       break;
+//     }
+//   }
+// }
+
+
+string check_prim(string type) {
+  if (type.compare("int") == 0 || type.compare("bool") == 0 
+    || type.compare("char") == 0  || type.compare("string") == 0 
+    || type.compare("null") == 0) {
+    return string("primitive");
+  }
+  return type;
+}
+
+string check_base(string type) {
+  return string("basetype");
+}
+
+bool check_types(string type, string one) {
+  if (type.compare("primitive") == 0) {
+    one = check_prim(one);
+  } else if (type.compare("basetype") == 0) {
+    one = check_base(one);
+  }
+  return (type.compare(one) == 0);
+}
+
+bool check_types(string type, string one, string two) {
+  if (type.compare("primitive") == 0) {
+    one = check_prim(one);
+    two = check_prim(two);
+  } else if (type.compare("basetype") == 0) {
+    one = check_base(one);
+    two = check_base(two);
+  }
+  return (type.compare(one) == 0 && type.compare(two) == 0);
+}
+
+void raise_error(astree* one, astree* two, astree* root) {
+  errprintf("Type mismatch at (%d,%d,%d): %s with %s\n", root->filenr, root->linenr, 
+    root->offset, one->type.c_str(), two->type.c_str());
+}
+
+void raise_error(string type, astree* one, astree* root) {
+  errprintf("Type mismatch at (%d,%d,%d): %s used with %s\n", root->filenr, root->linenr, 
+    root->offset, type.c_str(), one->type.c_str());
+}
+
+void type_post_case(astree* root) {
+  switch(root->symbol) {
+    case BINOP: {
+      int sym = root->children[1]->symbol;
+      if (sym == '+' || sym == '-' || sym == '*' || sym == '/' || sym == '%') {
+        if (!check_types("int", root->children[0]->type, root->children[2]->type)) {
+          raise_error(root->children[0], root->children[2], root->children[1]);
+        } else {
+          root->type = string("int");
+        }
+      } else if (sym == TOK_LT || sym == TOK_LE || sym == TOK_GT || sym == TOK_GE) {
+        if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {
+          raise_error(root->children[0], root->children[2], root->children[1]);
+        } else {
+          root->type = string("bool");
+        }
+      } else if (sym == '=') {
+        // anytype
+        root->type = string("anytype");
+      } else if (sym == TOK_EQ || sym == TOK_NE) {
+        // anytype
+        root->type = string("bool");
+      }
+    }
+    case UNOP: {
+      int sym = root->children[0]->symbol;
+      if (sym == '!') {
+        if (!check_types("bool", root->children[1]->type)) {
+          raise_error("!", root->children[1], root->children[0]);
+        } else {
+          root->type = string("bool");
+        }
+      } else if (sym == '+' || sym == '-') {
+        if (!check_types("int", root->children[1]->type)) {
+          raise_error("+ or -", root->children[1], root->children[0]);
+        } else {
+          root->type = string("int");
+        }
+      } else if (sym == TOK_ORD) {
+        if (!check_types("char", root->children[1]->type)) {
+          raise_error("ord", root->children[1], root->children[0]);
+          root->type = string("int");
+        } else {
+          root->type = string("int");
+        }
+      } else if (sym == TOK_CHR) {
+        if (!check_types("int", root->children[1]->type)) {
+          raise_error("chr", root->children[1], root->children[0]);
+        } else {
+          root->type = string("char");
+        }
+      }
+      break;
+    }
+    case IFELSE: {
+      if (!check_types("bool", root->children[0]->type)) {
+        raise_error("if", root->children[0], root->children[0]);
+      }
+      break;
+    }
+    case WHILE: {
+      if (!check_types("bool", root->children[0]->type)) {
+        raise_error("while", root->children[0], root->children[0]);
+      }
+      break;
+    }
+    case ALLOCATOR: {
+      if (!check_types("basetype", root->children[0]->type)) {
+        raise_error("allocator", root->children[0], root->children[0]);
+      }
+      break;
+    }
+    case CALL: {
+      if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {
+          raise_error(root->children[0], root->children[2], root->children[1]);
+      } else {
+          root->type = string("bool");
+      }
+    }
+  }
+}
+
+void type_check_traversal(astree* root) {
+  // fprintf(stderr, "%s %d\n", root->lexinfo->c_str(), root->symbol);
+  // type_pre_case(root);
+  for(size_t i = 0; i < root->children.size(); i++) {
+    type_check_traversal(root->children[i]);
+  }
+  type_post_case(root);
 }
 
 /* Traversal Functions */

@@ -133,10 +133,11 @@ int main (int argc, char** argv) {
 
    dump_astree(ast_file, yyparse_astree);
 
-   preorderTraversal(yyparse_astree);
+   build_table_traversal(yyparse_astree);
+   type_check_traversal(yyparse_astree);
 
    printf("==================\n");
-   table->dump(stdout, 0);
+   global_table->dump(stdout, 0);
    
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
