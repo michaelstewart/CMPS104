@@ -21,8 +21,6 @@ struct astree {
 astree* new_astree (int symbol, int filenr, int linenr,
                     int offset, const char* lexinfo);
 astree* new_astree (int symbol, const char* lexinfo);
-void build_table_traversal(astree* root);
-void type_check_traversal(astree* root);
 astree* adopt1 (astree* root, astree* child);
 astree* adopt_front (astree* root, astree* child);
 astree* adopt2 (astree* root, astree* left, astree* right);

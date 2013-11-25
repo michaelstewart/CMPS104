@@ -10,6 +10,7 @@ using namespace std;
 #include <unistd.h>
 
 #include "astree.h"
+#include "treeutils.h"
 #include "auxlib.h"
 #include "lyutils.h"
 #include "stringset.h"

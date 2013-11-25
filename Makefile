@@ -9,8 +9,8 @@ VALGRIND  = valgrind --leak-check=full --show-reachable=yes
 #
 # Definitions of list of files:
 #
-HSOURCES  = astree.h lyutils.h  auxlib.h  stringset.h symtable.h
-CSOURCES  = astree.cc lyutils.cc auxlib.cc stringset.cc oc.cc symtable.cc
+HSOURCES  = astree.h lyutils.h  auxlib.h  stringset.h symtable.h treeutils.h
+CSOURCES  = astree.cc lyutils.cc auxlib.cc stringset.cc oc.cc symtable.cc treeutils.cc
 LSOURCES  = scanner.l
 YSOURCES  = parser.y
 ETCSRC    = README ${MKFILE} ${DEPSFILE}

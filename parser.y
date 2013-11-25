@@ -26,7 +26,7 @@
 %token TOK_EQ TOK_NE TOK_LT TOK_LE TOK_GT TOK_GE
 %token TOK_IDENT TOK_INTCON TOK_CHARCON TOK_STRINGCON
 %token STRUCTDEF MEMBERS DECL TYPE BASETYPE FUNCTION
-%token PARAMETERS BLOCK VARDECL WHILE IFELSE RETURN
+%token PARAMETERS BLOCK VARDECL WHILE IFELSE
 %token BINOP UNOP ALLOCATOR CALL ARGS VARIABLE CONSTANT
 
 %token TOK_BLOCK TOK_CALL TOK_IFELSE TOK_INITDECL
@@ -98,8 +98,8 @@ while     : TOK_WHILE '(' expr ')' statement                  { free_ast($1); fr
 ifelse    : TOK_IF '(' expr ')' statement TOK_ELSE statement  { $$ = adopt2(new_parsenode(IFELSE, "ifelse"), $3, $5); adopt1($$, $7); free_ast2($1, $2); free_ast2 ($4, $6); }
           | TOK_IF '(' expr ')' statement %prec "then"        { $$ = adopt2(new_parsenode(IFELSE, "ifelse"), $3, $5); free_ast($1); free_ast2 ($2, $4); }
           ;
-return    : TOK_RETURN ';'                                    { free_ast2 ($1, $2); $$ = new_parsenode(RETURN, "return"); }
-          | TOK_RETURN expr ';'                               { free_ast2 ($1, $3); $$ = adopt1(new_parsenode(RETURN, "return"), $2); }
+return    : TOK_RETURN ';'                                    { free_ast ($2); $$ = $1; }
+          | TOK_RETURN expr ';'                               { free_ast ($3); $$ = adopt1($1, $2); }
           ;
 expr      : allocator                                         { $$ = $1; }
           | call                                              { $$ = $1; }
