@@ -133,10 +133,12 @@ int main (int argc, char** argv) {
 
    yyin_cpp_pclose();
 
-   dump_astree(ast_file, yyparse_astree);
+   
 
    build_table_traversal(yyparse_astree);
    type_check_traversal(yyparse_astree);
+
+   dump_astree(ast_file, yyparse_astree);
 
    printf("==================\n");
    global_table->dump(stdout, 0);
@@ -148,6 +150,8 @@ int main (int argc, char** argv) {
    // Dump the stringset
    dump_stringset (str_file);
    fclose(str_file);
+
+   fclose(ast_file);
 
    return get_exitstatus();
 }

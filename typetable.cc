@@ -1,8 +1,7 @@
 #include "auxlib.h"
 #include "typetable.h"
 
-TypeTable *type_tabel = new TypeTable(NULL);
-
+TypeTable *type_table = new TypeTable(NULL);
 
 // Creates and returns a new symbol table.
 //
@@ -10,7 +9,6 @@ TypeTable *type_tabel = new TypeTable(NULL);
 TypeTable::TypeTable(TypeTable* parent) {
   // Set the parent (this might be NULL)
   this->parent = parent;
-
 }
 
 // Add a symbol with the provided name and type to the current table.
@@ -21,7 +19,6 @@ void TypeTable::addType(string name, string type) {
   // Use the variable name as key for the identifier mapping
   this->types[name] = type;
 }
-
 
 // Creates a new empty table beneath the current table and returns it.
 TypeTable* TypeTable::addStruct(string name) {
@@ -43,15 +40,11 @@ TypeTable* TypeTable::lookupType(string name) {
 // Look up name in this and all surrounding blocks and return its type.
 //
 // Returns the empty string "" if variable was not found
-string TypeTable::lookup(string type, string id) {
-  TypeTable* t  = this->lookupType(type);
-  if (t != NULL) {
-    if (t->types.count(id) > 0) {
-      // If we found an entry, just return its type
-      return t->types[id];
-    }
+string TypeTable::lookup(string id) {
+  if (this->types.count(id) > 0) {
+    // If we found an entry, just return its type
+    return this->types[id];
   }
   return string("");
 }
-
 

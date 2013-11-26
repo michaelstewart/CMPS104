@@ -36,6 +36,22 @@ string tok_const_type(int sym) {
   return string("");
 }
 
+string tok_base_type(int sym) {
+  switch(sym) {
+    case TOK_VOID:
+      return string("null");
+    case TOK_INT:
+      return string("int");
+    case TOK_CHAR:
+      return string("char");
+    case TOK_STRING:
+      return string("string");
+    case TOK_BOOL:
+      return string("bool");
+  }
+  return string("");
+}
+
 /* Various Error Printing functions */
 void raise_error(astree* one, astree* two, astree* root) {
   errprintf("Type mismatch at (%d,%d,%d): %s with %s\n", root->filenr, root->linenr, 
@@ -82,9 +98,6 @@ void table_pre_case(astree* root) {
       root->type = root->children[0]->type;
       break;
     }
-    case TYPE: {
-      break;
-    }
     case FUNCTION: {
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
       string parameters = "(";
@@ -92,7 +105,7 @@ void table_pre_case(astree* root) {
         if (i) parameters += ',';
         if (root->children[2]->children[i]->symbol == DECL) {
           parameters += *root->children[2]->children[i]->children[0]->children[0]->children[0]->lexinfo;
-        }        
+        }
       }
       parameters += string(")");
 
@@ -111,21 +124,42 @@ void table_pre_case(astree* root) {
       root->type = return_type;
       break;
     }
-    case TOK_STRUCT: {
-      // cout << *root->lexinfo << endl;
-      // TypeTable* local_table = type_tabel->addStruct(root->lexinfo);
-    }
   }
 }
 
 void table_post_case(astree* root) {
   switch (root->symbol) {
-    case FUNCTION:
+    case TOK_STRUCT: {
+      TypeTable* local_table = type_table->addStruct(*root->children[0]->lexinfo);
+      for(size_t i = 0; i < root->children[1]->children.size(); i++) {
+        local_table->addType(*root->children[1]->children[i]->children[1]->lexinfo, root->children[1]->children[i]->children[0]->type);
+        root->children[1]->children[i]->children[1]->type = root->children[1]->children[i]->children[0]->type;
+      }
+      break;
+    }
+    case FUNCTION: {
       current_table = current_table->leaveBlock();
       break;
-    case BLOCK:
+    }
+    case BLOCK: {
       current_table = current_table->leaveBlock();
       break;
+    }
+    case BASETYPE: {
+      if (root->children[0]->symbol == TOK_IDENT) {
+        if (type_table->lookupType(*root->children[0]->lexinfo) != NULL) {
+          root->children[0]->type = *root->children[0]->lexinfo;
+          root->type = root->children[0]->type;
+        }
+      } else {
+        root->type = tok_base_type(root->children[0]->symbol);
+      }
+      break;
+    }
+    case TYPE: {
+      root->type = root->children[0]->type;
+      break;
+    }
   }
 }
 
@@ -174,6 +208,10 @@ bool check_types(string type, string one, string two) {
   return (type.compare(one) == 0 && type.compare(two) == 0);
 }
 
+bool check_type_equal(string one, string two) {
+  return (one.compare(two) == 0);
+}
+
 void type_post_case(astree* root) {
   switch(root->symbol) {
     case BINOP: {
@@ -181,20 +219,23 @@ void type_post_case(astree* root) {
       if (sym == '+' || sym == '-' || sym == '*' || sym == '/' || sym == '%') {
         if (!check_types("int", root->children[0]->type, root->children[2]->type)) {
           raise_error(root->children[0], root->children[2], root->children[1]);
-        } else {
-          root->type = string("int");
         }
+        root->type = string("int");
       } else if (sym == TOK_LT || sym == TOK_LE || sym == TOK_GT || sym == TOK_GE) {
         if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {
           raise_error(root->children[0], root->children[2], root->children[1]);
-        } else {
-          root->type = string("bool");
-        }
+        } 
+        root->type = string("bool");
       } else if (sym == '=') {
         // anytype
+        if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+          raise_error(root->children[0], root->children[2], root->children[1]);
+        } 
         root->type = string("anytype");
       } else if (sym == TOK_EQ || sym == TOK_NE) {
-        // anytype
+        if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+          raise_error(root->children[0], root->children[2], root->children[1]);
+        } 
         root->type = string("bool");
       }
     }
@@ -203,28 +244,23 @@ void type_post_case(astree* root) {
       if (sym == '!') {
         if (!check_types("bool", root->children[1]->type)) {
           raise_error("!", root->children[1], root->children[0]);
-        } else {
-          root->type = string("bool");
-        }
+        } 
+        root->type = string("bool");
       } else if (sym == '+' || sym == '-') {
         if (!check_types("int", root->children[1]->type)) {
           raise_error("+ or -", root->children[1], root->children[0]);
-        } else {
-          root->type = string("int");
-        }
+        } 
+        root->type = string("int");
       } else if (sym == TOK_ORD) {
         if (!check_types("char", root->children[1]->type)) {
           raise_error("ord", root->children[1], root->children[0]);
-          root->type = string("int");
-        } else {
-          root->type = string("int");
-        }
+        } 
+        root->type = string("int");
       } else if (sym == TOK_CHR) {
         if (!check_types("int", root->children[1]->type)) {
           raise_error("chr", root->children[1], root->children[0]);
-        } else {
-          root->type = string("char");
-        }
+        } 
+        root->type = string("char");
       }
       break;
     }
@@ -241,8 +277,47 @@ void type_post_case(astree* root) {
       break;
     }
     case ALLOCATOR: {
-      if (!check_types("basetype", root->children[0]->type)) {
-        raise_error("allocator", root->children[0], root->children[0]);
+      if (root->children[0]->children[0]->symbol == TOK_IDENT) {
+        // We're looking for a struct
+        // cout << "STRUCT: " << *root->children[0]->children[0]->lexinfo << endl;
+        if (type_table->lookupType(*root->children[0]->children[0]->lexinfo) != NULL) {
+          root->type = root->children[0]->type;
+        }
+      } else {
+        if (!check_types("basetype", root->children[0]->type)) {
+          raise_error("allocator", root->children[0], root->children[0]);
+        }
+      }
+      break;
+    }
+    case VARDECL: {
+      if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+        raise_error(root->children[0], root->children[2], root->children[1]);
+      }
+      break;
+    }
+    case VARIABLE: {
+      
+      if (root->children.size() == 3) {
+        // index into string -> char
+        if (root->children[1]->symbol == '[') {
+          if (!check_types("string", root->children[0]->type) || !check_types("int", root->children[2]->type)) {
+            raise_error("Incorrect index into string", root->children[1]);
+          } else {
+            root->type = string("char");
+          }          
+        }
+       if (root->children[1]->symbol == '.') {
+          TypeTable* local = type_table->lookupType(root->children[0]->type);
+          if (local == NULL) {
+            raise_error("Type does not exist", root->children[1]);
+          } else {
+            root->type = local->lookup(*root->children[2]->lexinfo);
+            if (root->type.compare("") == 0) {
+              raise_error("Invalid struct element", root->children[1]);
+            }
+          }        
+        } 
       }
       break;
     }

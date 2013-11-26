@@ -1,5 +1,5 @@
-#ifndef __SYMTABLE_H__
-#define __SYMTABLE_H__
+#ifndef __TYPEABLE_H__
+#define __TYPEABLE_H__
 
 #include <stdio.h>
 
@@ -39,7 +39,7 @@ public:
   // Look up name in this and all surrounding blocks and return its type.
   //
   // Returns the empty string "" if variable was not found
-  string lookup(string type, string id);
+  string lookup(string id);
 
 };
 

@@ -108,6 +108,7 @@ ${DEPSFILE} :
 
 #
 test : ${EXECBIN}
+	clear
 	oc ../oc_test/test.oc
 
 tests : ${EXECBIN}
