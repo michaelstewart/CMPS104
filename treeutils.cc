@@ -213,6 +213,7 @@ bool check_type_equal(string one, string two) {
 }
 
 void type_post_case(astree* root) {
+  
   switch(root->symbol) {
     case BINOP: {
       int sym = root->children[1]->symbol;
@@ -297,7 +298,6 @@ void type_post_case(astree* root) {
       break;
     }
     case VARIABLE: {
-      
       if (root->children.size() == 3) {
         // index into string -> char
         if (root->children[1]->symbol == '[') {
@@ -322,15 +322,24 @@ void type_post_case(astree* root) {
       break;
     }
     case CALL: {
+      
       vector<string> args = global_table->parseSignature(root->type);
-      if (args.size()-1 != root->children[1]->children.size()) {
+      int numArgs;
+      if (root->children.size() < 2) {
+        numArgs = 0;
+      } else {
+        numArgs = root->children[1]->children.size();
+      }
+      if (args.size()-1 != numArgs) {
         raise_error("Function called with incorrect number of args.", root->children[0]);
       }
+      
       for(size_t i = 1; i < args.size(); i++) {
         if (args[i].compare(root->children[1]->children[i-1]->type) != 0) {
           raise_error("Function called with incorrect argument types.", root->children[0]);
         }
       }
+      
       break;
     }
     case TOK_RETURN: {
