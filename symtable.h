@@ -22,7 +22,7 @@ class SymbolTable {
   SymbolTable* parent;
 
   // The mapping of identifiers to their types
-  map<string,string> mapping;
+  map<string, string> mapping;
   map<string, size_t> filenr;
   map<string, size_t> linenr;
   map<string, size_t> index;

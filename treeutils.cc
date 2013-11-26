@@ -70,6 +70,7 @@ void raise_error(string type, astree* root) {
 }
 
 void table_pre_case(astree* root) {
+  cerr << get_yytname(root->symbol) << endl;
   switch(root->symbol) {
     case BLOCK: {
       // printf("%s\n", (*root->children[0]->lexinfo).c_str());
@@ -107,6 +108,7 @@ void table_pre_case(astree* root) {
       break;
     }
     case FUNCTION: {
+      cerr << "HERE1" << endl;
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
 
       string parameters = "";
@@ -120,17 +122,15 @@ void table_pre_case(astree* root) {
           }
         }
         parameters += ")";
-        root->children[3]->noBlock = true;
-      } else {
+      } else if(root->children.size() == 3) {
         // No params
         parameters = "()";
-        root->children[2]->noBlock = true;
       }
-   
+
+      root->children[root->children.size()-1]->noBlock = true;
+
       current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
-
       current_table = current_table->enterFunction(*root->children[1]->lexinfo, return_type + parameters);
-
       break;
     }
     case CALL: {
@@ -168,6 +168,8 @@ void table_post_case(astree* root) {
       break;
     }
     case BLOCK: {
+      if (root->noBlock)
+        break;
       current_table = current_table->leaveBlock();
       break;
     }

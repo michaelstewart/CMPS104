@@ -1,5 +1,6 @@
 #include "auxlib.h"
 #include "symtable.h"
+#include <iostream>
 
 SymbolTable *global_table = new SymbolTable(NULL);
 SymbolTable *current_table = global_table;
@@ -41,13 +42,19 @@ SymbolTable* SymbolTable::leaveBlock() {
 //          call "currentSymbolTable->enterFunction("add", "void(int,int)");
 SymbolTable* SymbolTable::enterFunction(string name, string signature) {
   // Add a new symbol using the signature as type
+  cerr << "A1 T" << name << endl;
   this->addSymbol(name, signature);
+  cerr << "A2" << endl;
+  // return NULL;
+  
   // Create the child symbol table
   SymbolTable* child = new SymbolTable(this);
+
   // Store the symbol table under the name of the function
   // This allows us to retrieve the corresponding symbol table of a function
   // and the coresponding function of a symbol table.
   this->subscopes[name] = child;
+
   return child;
 }
 
