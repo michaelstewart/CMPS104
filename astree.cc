@@ -22,6 +22,7 @@ astree* new_astree (int symbol, int filenr, int linenr,
    tree->linenr = linenr;
    tree->offset = offset;
    tree->lexinfo = intern_stringset (lexinfo, false);
+   tree->noBlock = false;
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());
@@ -33,6 +34,7 @@ astree* new_astree (int symbol, const char* lexinfo) {
    tree->type = string("");
    tree->symbol = symbol;
    tree->lexinfo = intern_stringset (lexinfo, true);
+   tree->noBlock = false;
    DEBUGF ('f', "astree %p->{%d:%d.%d: %s: \"%s\"}\n",
            tree, tree->filenr, tree->linenr, tree->offset,
            get_yytname (tree->symbol), tree->lexinfo->c_str());

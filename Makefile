@@ -109,7 +109,7 @@ ${DEPSFILE} :
 #
 test : ${EXECBIN}
 	clear
-	oc ../oc_test/test.oc
+	oc ../test/41-linkedstack.oc
 
 tests : ${EXECBIN}
 	touch ${TESTINS}

@@ -23,6 +23,9 @@ class SymbolTable {
 
   // The mapping of identifiers to their types
   map<string,string> mapping;
+  map<string, size_t> filenr;
+  map<string, size_t> linenr;
+  map<string, size_t> index;
 
   // All symbol tables beneath this one (the sub-scopes)
   // are keps in this map.
@@ -56,6 +59,8 @@ public:
   // Example: To add the variable declaration "int i = 23;"
   //          use "currentSymbolTable->addSymbol("i", "int");
   void addSymbol(string name, string type);
+
+  void addLine(string name, size_t filenr, size_t linenr, size_t index);
 
   // Dumps the content of the symbol table and all its inner scopes
   // depth denotes the level of indention.

@@ -13,6 +13,7 @@ struct astree {
    size_t linenr;            // line number from source code
    size_t offset;            // offset of token with current line
    const string* lexinfo;    // pointer to lexical information
+   bool noBlock; 	// used to make a block not open an new scope		
    string type;    	 // type information
    vector<astree*> children; // children of this n-way node
 };

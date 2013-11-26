@@ -129,8 +129,8 @@ unop      : '+' expr %prec POS                                { $$ = adopt2(new_
           | TOK_CHR expr                                      { $$ = adopt2(new_parsenode(UNOP, "unop"), $1, $2); }
           ;
 allocator : TOK_NEW basetype '(' ')'                          { $$ = adopt1(new_parsenode(ALLOCATOR, "allocator"), $2); free_ast($1); free_ast2($3, $4); }
-          | TOK_NEW basetype '(' expr ')'                     { $$ = adopt2(new_parsenode(ALLOCATOR, "allocator"), $2, $4); free_ast($1); free_ast2($3, $5);  }
-          | TOK_NEW basetype '[' expr ']'                     { $$ = adopt2(new_parsenode(ALLOCATOR, "allocator"), $2, $4); free_ast($1); free_ast2($3, $5); }
+          | TOK_NEW basetype '(' expr ')'                     { $$ = adopt2(new_parsenode(ALLOCATOR, "allocator"), $2, adopt1($3, $4)); free_ast2($1, $5);  }
+          | TOK_NEW basetype '[' expr ']'                     { $$ = adopt2(new_parsenode(ALLOCATOR, "allocator"), $2, adopt1($3, $4)); free_ast2($1, $5); }
           ;
 call      : TOK_IDENT '(' ')'                                 { $$ = adopt1(new_parsenode(CALL, "call"), $1); free_ast2($2, $3); }
           | TOK_IDENT '(' clist ')'                           { $$ = adopt2(new_parsenode(CALL, "call"), $1, $3); free_ast2($2, $4); }

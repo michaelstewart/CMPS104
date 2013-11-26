@@ -15,6 +15,7 @@
 
 using namespace std;
 
+bool in_structdef = false;
 
 /* Build TableTraversal */
 
@@ -72,18 +73,25 @@ void table_pre_case(astree* root) {
   switch(root->symbol) {
     case BLOCK: {
       // printf("%s\n", (*root->children[0]->lexinfo).c_str());
+      if (root->noBlock)
+        break;
       current_table = current_table->enterBlock();
       break;
     }
     case VARDECL: {
-      // printf("T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
+      // printf("VARDECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
       current_table->addSymbol(*root->children[1]->lexinfo, 
         *root->children[0]->children[0]->children[0]->lexinfo);
+      current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
     }
     case DECL: {
+      if (in_structdef)
+        break;
+      // printf("DECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());      
       current_table->addSymbol(*root->children[1]->lexinfo, 
         *root->children[0]->children[0]->children[0]->lexinfo);
+      current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
     }
     case VARIABLE: {
@@ -100,16 +108,29 @@ void table_pre_case(astree* root) {
     }
     case FUNCTION: {
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
-      string parameters = "(";
-      for(size_t i = 0; i < root->children[2]->children.size(); i++) {
-        if (i) parameters += ',';
-        if (root->children[2]->children[i]->symbol == DECL) {
-          parameters += *root->children[2]->children[i]->children[0]->children[0]->children[0]->lexinfo;
+
+      string parameters = "";
+      if (root->children.size() == 4) {
+        // If there are params
+        parameters += "(";
+        for(size_t i = 0; i < root->children[2]->children.size(); i++) {
+          if (i) parameters += ',';
+          if (root->children[2]->children[i]->symbol == DECL) {
+            parameters += *root->children[2]->children[i]->children[0]->children[0]->children[0]->lexinfo;
+          }
         }
+        parameters += ")";
+        root->children[3]->noBlock = true;
+      } else {
+        // No params
+        parameters = "()";
+        root->children[2]->noBlock = true;
       }
-      parameters += string(")");
+   
+      current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
 
       current_table = current_table->enterFunction(*root->children[1]->lexinfo, return_type + parameters);
+
       break;
     }
     case CALL: {
@@ -124,12 +145,17 @@ void table_pre_case(astree* root) {
       root->type = return_type;
       break;
     }
+    case TOK_STRUCT: {
+      in_structdef = true;
+      break;
+    }
   }
 }
 
 void table_post_case(astree* root) {
   switch (root->symbol) {
     case TOK_STRUCT: {
+      in_structdef = false;
       TypeTable* local_table = type_table->addStruct(*root->children[0]->lexinfo);
       for(size_t i = 0; i < root->children[1]->children.size(); i++) {
         local_table->addType(*root->children[1]->children[i]->children[1]->lexinfo, root->children[1]->children[i]->children[0]->type);
@@ -214,6 +240,9 @@ bool check_types(string type, string one, string two) {
 }
 
 bool check_type_equal(string one, string two) {
+  if (one.compare("basetype") == 0 || two.compare("basetype") == 0) {
+    return true;
+  }
   if (one.compare("null") == 0 || two.compare("null") == 0) {
     return true;
   }
@@ -292,11 +321,16 @@ void type_post_case(astree* root) {
         if (type_table->lookupType(*root->children[0]->children[0]->lexinfo) != NULL) {
           root->type = root->children[0]->type;
         }
+      } else if (root->children[1]->symbol == '[') {
+       root->type = "basetype";
+      } else if (root->children[1]->symbol == '(') {
+       root->type = "basetype";
       } else {
         if (!check_types("basetype", root->children[0]->type)) {
           raise_error("allocator", root->children[0], root->children[0]);
         }
       }
+
       break;
     }
     case VARDECL: {
@@ -331,7 +365,7 @@ void type_post_case(astree* root) {
     }
     case CALL: {
       vector<string> args = global_table->parseSignature(root->type);
-      int numArgs;
+      size_t numArgs;
       if (root->children.size() < 2) {
         numArgs = 0;
       } else {

@@ -60,6 +60,13 @@ void SymbolTable::addSymbol(string name, string type) {
   this->mapping[name] = type;
 }
 
+void SymbolTable::addLine(string name, size_t filenr, size_t linenr, size_t index) {
+  // Use the variable name as key for the identifier mapping
+  this->filenr[name] = filenr;
+  this->linenr[name] = linenr;
+  this->index[name] = index;
+}
+
 // Dumps the content of the symbol table and all its inner scopes
 // depth denotes the level of indention.
 //
@@ -75,7 +82,8 @@ void SymbolTable::dump(FILE* symfile, int depth) {
     const char* type = it->second.c_str();
     // Print the symbol as "name {blocknumber} type"
     // indented by 3 spaces for each level
-    fprintf(symfile, "%*s%s {%d} %s\n", 3*depth, "", name, this->number, type);
+    fprintf(symfile, "%*s%s (%lu.%lu.%lu) {%d} %s\n", 3*depth, "", name, 
+      this->filenr[name], this->linenr[name], this->index[name], this->number, type);
     // If the symbol we just printed is actually a function
     // then we can find the symbol table of the function by the name
     if (this->subscopes.count(name) > 0) {
