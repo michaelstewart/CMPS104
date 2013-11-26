@@ -15,6 +15,7 @@ using namespace std;
 #include "lyutils.h"
 #include "stringset.h"
 #include "symtable.h"
+#include "typetable.h"
 
 string CPP = "/usr/bin/cpp";
 string yyin_cpp_command;

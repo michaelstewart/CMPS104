@@ -11,6 +11,7 @@
 #include "stringset.h"
 #include "lyutils.h"
 #include "symtable.h"
+#include "typetable.h"
 
 using namespace std;
 
