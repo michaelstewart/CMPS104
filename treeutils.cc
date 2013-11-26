@@ -111,6 +111,10 @@ void table_pre_case(astree* root) {
       root->type = return_type;
       break;
     }
+    case TOK_STRUCT: {
+      // cout << *root->lexinfo << endl;
+      // TypeTable* local_table = type_tabel->addStruct(root->lexinfo);
+    }
   }
 }
 
