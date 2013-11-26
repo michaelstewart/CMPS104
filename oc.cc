@@ -135,11 +135,11 @@ int main (int argc, char** argv) {
    yyin_cpp_pclose();
 
    
-   cerr << "Before build table traversal" << endl;
+   // cerr << "Before build table traversal" << endl;
    build_table_traversal(yyparse_astree);
-   cerr << "Between traversals" << endl;
+   // cerr << "Between traversals" << endl;
    type_check_traversal(yyparse_astree);
-   cerr << "after traversals" << endl;
+   // cerr << "after traversals" << endl;
 
    dump_astree(ast_file, yyparse_astree);
 

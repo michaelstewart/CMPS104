@@ -70,7 +70,7 @@ void raise_error(string type, astree* root) {
 }
 
 void table_pre_case(astree* root) {
-  cerr << get_yytname(root->symbol) << endl;
+  // cerr << get_yytname(root->symbol) << endl;
   switch(root->symbol) {
     case BLOCK: {
       // printf("%s\n", (*root->children[0]->lexinfo).c_str());
@@ -108,7 +108,6 @@ void table_pre_case(astree* root) {
       break;
     }
     case FUNCTION: {
-      cerr << "HERE1" << endl;
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
 
       string parameters = "";
