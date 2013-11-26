@@ -141,8 +141,10 @@ void table_pre_case(astree* root) {
       break;
     }
     case TOK_RETURN: {
-      string return_type = global_table->parseSignature(current_table->parentFunction(current_table))[0];
-      root->type = return_type;
+      vector<string> sig = global_table->parseSignature(current_table->parentFunction(current_table));
+      if (sig.size() > 0) {
+        root->type = sig[0];
+      }      
       break;
     }
     case TOK_STRUCT: {
