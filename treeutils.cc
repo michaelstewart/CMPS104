@@ -185,7 +185,12 @@ string check_prim(string type) {
 }
 
 string check_base(string type) {
-  return string("basetype");
+  if (check_prim(type).compare("primitive") == 0) {
+    return string("basetype");
+  } else if (type_table->lookupType(type) != NULL) {
+    return string("basetype");
+  }
+  return type;
 }
 
 bool check_types(string type, string one) {
@@ -209,6 +214,9 @@ bool check_types(string type, string one, string two) {
 }
 
 bool check_type_equal(string one, string two) {
+  if (one.compare("null") == 0 || two.compare("null") == 0) {
+    return true;
+  }
   return (one.compare(two) == 0);
 }
 
@@ -222,8 +230,8 @@ void type_post_case(astree* root) {
           raise_error(root->children[0], root->children[2], root->children[1]);
         }
         root->type = string("int");
-      } else if (sym == TOK_LT || sym == TOK_LE || sym == TOK_GT || sym == TOK_GE) {
-        if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {
+      } else if (sym == TOK_LT || sym == TOK_LE || sym == TOK_GT || sym == TOK_GE) {        
+        if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {          
           raise_error(root->children[0], root->children[2], root->children[1]);
         } 
         root->type = string("bool");
@@ -322,7 +330,6 @@ void type_post_case(astree* root) {
       break;
     }
     case CALL: {
-      
       vector<string> args = global_table->parseSignature(root->type);
       int numArgs;
       if (root->children.size() < 2) {
