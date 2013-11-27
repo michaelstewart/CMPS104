@@ -169,7 +169,7 @@ void table_pre_case(astree* root) {
       // printf("VARDECL - N: %s T: %s \n", (*root->children[1]->lexinfo).c_str(), (root->children[0]->type).c_str());
       string type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (!check_base(type)) {
-        // raise_error("Declarations ought to be of type anytype");
+        raise_error("Declarations ought to be of type anytype");
       }
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
