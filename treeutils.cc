@@ -88,9 +88,13 @@ void table_pre_case(astree* root) {
       break;
     }
     case VARDECL: {
-      // printf("VARDECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());
-      current_table->addSymbol(*root->children[1]->lexinfo, 
-        *root->children[0]->children[0]->children[0]->lexinfo);
+      // printf("VARDECL - N: %s T: %s \n", (*root->children[1]->lexinfo).c_str(), (root->children[0]->type).c_str());
+      string type = *root->children[0]->children[0]->children[0]->lexinfo;
+      if (root->children[0]->children.size() > 1) {
+        // If it's an array add [] to end
+        type += "[]";
+      } 
+      current_table->addSymbol(*root->children[1]->lexinfo, type);
       current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
     }
