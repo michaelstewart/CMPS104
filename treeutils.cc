@@ -213,8 +213,8 @@ void table_pre_case(astree* root) {
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
-        if (!check_base(root->type)) {
-          // raise_error("Arrays ought to be of type basetype");
+        if (!check_base(return_type)) {
+          raise_error("Arrays ought to be of type basetype");
         }
         return_type += "[]";
       } 
