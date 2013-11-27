@@ -101,9 +101,13 @@ void table_pre_case(astree* root) {
     case DECL: {
       if (in_structdef)
         break;
-      // printf("DECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());      
-      current_table->addSymbol(*root->children[1]->lexinfo, 
-        *root->children[0]->children[0]->children[0]->lexinfo);
+      // printf("DECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());  
+       string type = *root->children[0]->children[0]->children[0]->lexinfo;
+      if (root->children[0]->children.size() > 1) {
+        // If it's an array add [] to end
+        type += "[]";
+      }  
+      current_table->addSymbol(*root->children[1]->lexinfo, type);
       current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
     }
@@ -132,8 +136,13 @@ void table_pre_case(astree* root) {
         parameters += "(";
         for(size_t i = 0; i < root->children[2]->children.size(); i++) {
           if (i) parameters += ',';
+          astree* t = root->children[2]->children[i];
           if (root->children[2]->children[i]->symbol == DECL) {
-            parameters += *root->children[2]->children[i]->children[0]->children[0]->children[0]->lexinfo;
+            parameters += *t->children[0]->children[0]->children[0]->lexinfo;
+            if (t->children[0]->children.size() > 1) {
+              // If it's an array add [] to end
+              parameters += "[]";
+            }
           }
         }
         parameters += ")";
@@ -408,6 +417,7 @@ void type_post_case(astree* root) {
        if (root->children[1]->symbol == '.') {
           TypeTable* local = type_table->lookupType(root->children[0]->type);
           // lookup that type
+          cerr << "T0:" << root->children[0]->type << " T1:" << *root->children[2]->lexinfo << endl;
           if (local == NULL) {
             raise_error("Type does not exist", root->children[1]);
           } else {

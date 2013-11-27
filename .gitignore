@@ -4,6 +4,7 @@ oc
 *.str
 *.tok
 *.ast
+*.sym
 *.oc
 *.oh
 *.txt
