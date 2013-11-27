@@ -42,9 +42,7 @@ SymbolTable* SymbolTable::leaveBlock() {
 //          call "currentSymbolTable->enterFunction("add", "void(int,int)");
 SymbolTable* SymbolTable::enterFunction(string name, string signature) {
   // Add a new symbol using the signature as type
-  cerr << "A1 T" << name << endl;
   this->addSymbol(name, signature);
-  cerr << "A2" << endl;
   // return NULL;
   
   // Create the child symbol table

@@ -187,6 +187,10 @@ void table_post_case(astree* root) {
     }
     case TYPE: {
       root->type = root->children[0]->type;
+      if (root->children.size() > 1) {
+        // If it's an array add [] to end
+        root->type += "[]";
+      } 
       break;
     }
   }
@@ -204,53 +208,69 @@ void build_table_traversal(astree* root) {
 
 /* Type Checking Traversal */
 
-string check_prim(string type) {
+/* Type Checking Helpers */
+
+bool check_prim(string type) {
   if (type.compare("int") == 0 || type.compare("bool") == 0 
     || type.compare("char") == 0  || type.compare("string") == 0 
     || type.compare("null") == 0) {
-    return string("primitive");
+    return true;
   }
-  return type;
+  return false;
 }
 
-string check_base(string type) {
-  if (check_prim(type).compare("primitive") == 0) {
-    return string("basetype");
+bool check_prim(string type1, string type2) {
+  return check_prim(type1) && check_prim(type2);
+}
+
+bool check_base(string type) {
+  if (check_prim(type)) {
+    return true;
   } else if (type_table->lookupType(type) != NULL) {
-    return string("basetype");
+    return true;
   }
-  return type;
+  return false;
 }
 
-bool check_types(string type, string one) {
-  if (type.compare("primitive") == 0) {
-    one = check_prim(one);
-  } else if (type.compare("basetype") == 0) {
-    one = check_base(one);
-  }
-  return (type.compare(one) == 0);
+bool check_base(string type1, string type2) {
+  return check_base(type1) && check_base(type2);
 }
 
 bool check_types(string type, string one, string two) {
+  // cout << "T:" << type << " one:" << one << " two:" << two;
   if (type.compare("primitive") == 0) {
-    one = check_prim(one);
-    two = check_prim(two);
+    if (!check_prim(one, two)) {
+      return false;
+    } else {
+      return (one.compare(two) == 0);
+    }
   } else if (type.compare("basetype") == 0) {
-    one = check_base(one);
-    two = check_base(two);
+    if (!check_base(one, two)) {
+      return false;
+    } else {
+      return (one.compare(two) == 0);
+    }
+  } else if (type.compare("") == 0) {
+    return (one.compare(two) == 0);
   }
-  return (type.compare(one) == 0 && type.compare(two) == 0);
+  return (type.compare(one) == 0) && (type.compare(two) == 0);  
 }
 
-bool check_type_equal(string one, string two) {
-  if (one.compare("basetype") == 0 || two.compare("basetype") == 0) {
-    return true;
-  }
-  if (one.compare("null") == 0 || two.compare("null") == 0) {
-    return true;
-  }
-  return (one.compare(two) == 0);
+bool check_types(string one, string two) {
+  return check_types("", one, two);
 }
+
+bool check_type(string type, string one) {
+  if (type.compare("primitive") == 0) {
+    return check_prim(one);
+  } else if (type.compare("basetype") == 0) {
+    return check_base(one);
+  } else {
+    return (type.compare(one) == 0);
+  }
+}
+
+/* End Type Checking Helpers */
 
 void type_post_case(astree* root) {
   
@@ -263,18 +283,18 @@ void type_post_case(astree* root) {
         }
         root->type = string("int");
       } else if (sym == TOK_LT || sym == TOK_LE || sym == TOK_GT || sym == TOK_GE) {        
-        if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {          
+        if (!check_types("primitive", root->children[0]->type, root->children[2]->type)) {        
           raise_error(root->children[0], root->children[2], root->children[1]);
         } 
         root->type = string("bool");
       } else if (sym == '=') {
         // anytype
-        if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+        if (!check_types(root->children[0]->type, root->children[2]->type)) {
           raise_error(root->children[0], root->children[2], root->children[1]);
         } 
         root->type = string("anytype");
       } else if (sym == TOK_EQ || sym == TOK_NE) {
-        if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+        if (!check_types(root->children[0]->type, root->children[2]->type)) {
           raise_error(root->children[0], root->children[2], root->children[1]);
         } 
         root->type = string("bool");
@@ -283,22 +303,22 @@ void type_post_case(astree* root) {
     case UNOP: {
       int sym = root->children[0]->symbol;
       if (sym == '!') {
-        if (!check_types("bool", root->children[1]->type)) {
+        if (!check_type("bool", root->children[1]->type)) {
           raise_error("!", root->children[1], root->children[0]);
         } 
         root->type = string("bool");
       } else if (sym == '+' || sym == '-') {
-        if (!check_types("int", root->children[1]->type)) {
+        if (!check_type("int", root->children[1]->type)) {
           raise_error("+ or -", root->children[1], root->children[0]);
         } 
         root->type = string("int");
       } else if (sym == TOK_ORD) {
-        if (!check_types("char", root->children[1]->type)) {
+        if (!check_type("char", root->children[1]->type)) {
           raise_error("ord", root->children[1], root->children[0]);
         } 
         root->type = string("int");
       } else if (sym == TOK_CHR) {
-        if (!check_types("int", root->children[1]->type)) {
+        if (!check_type("int", root->children[1]->type)) {
           raise_error("chr", root->children[1], root->children[0]);
         } 
         root->type = string("char");
@@ -306,13 +326,13 @@ void type_post_case(astree* root) {
       break;
     }
     case IFELSE: {
-      if (!check_types("bool", root->children[0]->type)) {
+      if (!check_type("bool", root->children[0]->type)) {
         raise_error("if", root->children[0], root->children[0]);
       }
       break;
     }
     case WHILE: {
-      if (!check_types("bool", root->children[0]->type)) {
+      if (!check_type("bool", root->children[0]->type)) {
         raise_error("while", root->children[0], root->children[0]);
       }
       break;
@@ -325,19 +345,18 @@ void type_post_case(astree* root) {
           root->type = root->children[0]->type;
         }
       } else if (root->children[1]->symbol == '[') {
-       root->type = "basetype";
+       root->type = root->children[0]->type + "[]";
       } else if (root->children[1]->symbol == '(') {
-       root->type = "basetype";
+       root->type =root->children[0]->type;
       } else {
-        if (!check_types("basetype", root->children[0]->type)) {
+        if (!check_type("basetype", root->children[0]->type)) {
           raise_error("allocator", root->children[0], root->children[0]);
         }
       }
-
       break;
     }
     case VARDECL: {
-      if (!check_type_equal(root->children[0]->type, root->children[2]->type)) {
+      if (!check_type(root->children[0]->type, root->children[2]->type)) {
         raise_error(root->children[0], root->children[2], root->children[1]);
       }
       break;
@@ -383,7 +402,6 @@ void type_post_case(astree* root) {
           raise_error("Function called with incorrect argument types.", root->children[0]);
         }
       }
-      
       break;
     }
     case TOK_RETURN: {

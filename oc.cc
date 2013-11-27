@@ -121,19 +121,24 @@ int main (int argc, char** argv) {
    }
 
    // Open up the output files.
+   // str
    string str_path = string(program_name) + ".str";
    FILE* str_file = fopen(str_path.c_str(), "w");
+   // tok
    str_path = string(program_name) + ".tok";
    tok_file = fopen(str_path.c_str(), "w");
+   // ast
    str_path = string(program_name) + ".ast";
    FILE* ast_file = fopen(str_path.c_str(), "w");
+   // sym
+   str_path = string(program_name) + ".sym";
+   FILE* sym_file = fopen(str_path.c_str(), "w");
 
    yyin_cpp_popen(filename);
 
    yyparse();
 
    yyin_cpp_pclose();
-
    
    // cerr << "Before build table traversal" << endl;
    build_table_traversal(yyparse_astree);
@@ -142,9 +147,10 @@ int main (int argc, char** argv) {
    // cerr << "after traversals" << endl;
 
    dump_astree(ast_file, yyparse_astree);
+   fclose(ast_file);
 
-   printf("==================\n");
-   global_table->dump(stdout, 0);
+   global_table->dump(sym_file, 0);
+   fclose(sym_file);
    
    DEBUGSTMT ('s', dump_stringset (stderr); );
    yylex_destroy();
@@ -153,8 +159,6 @@ int main (int argc, char** argv) {
    // Dump the stringset
    dump_stringset (str_file);
    fclose(str_file);
-
-   fclose(ast_file);
 
    return get_exitstatus();
 }
