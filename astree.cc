@@ -85,15 +85,23 @@ static void dump_node (FILE* outfile, astree* node) {
    }
 }
 
+bool print_symbol(int sym) {
+  return (sym == TOK_ROOT || sym == PARAMETERS || sym == BLOCK || sym == VARDECL 
+    || sym == WHILE || sym == IFELSE || sym == BINOP || sym == UNOP 
+    || sym == ALLOCATOR || sym == CALL || sym == ARGS || sym == VARIABLE 
+    || sym == CONSTANT || sym == STRUCTDEF || sym == MEMBERS || sym == DECL 
+    || sym == TYPE || sym == BASETYPE || sym == FUNCTION);
+}
+
 static void dump_astree_rec (FILE* outfile, astree* root,
                              int depth) {
   if (root == NULL) return;
-  if (root->symbol == TOK_ROOT)
+  if (print_symbol(root->symbol))
     fprintf (outfile, "%*s%s\n", depth * 3, "",
     root->lexinfo->c_str());
   else
-    fprintf (outfile, "%*s%s (%s) --- %s\n", depth * 3, "",
-    get_yytname (root->symbol), root->lexinfo->c_str(), root->type.c_str());
+    fprintf (outfile, "%*s%s (%s)\n", depth * 3, "",
+    get_yytname (root->symbol), root->lexinfo->c_str());
    for (size_t child = 0; child < root->children.size();
         ++child) {
       dump_astree_rec (outfile, root->children[child],
