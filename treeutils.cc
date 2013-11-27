@@ -246,6 +246,12 @@ bool check_base(string type1, string type2) {
   return check_base(type1) && check_base(type2);
 }
 
+bool eq(string type1, string type2) {
+  if (type1.compare("null") == 0 || type2.compare("null") == 0)
+    return true;
+  return (type1.compare(type2) == 0);
+}
+
 bool check_types(string type, string one, string two) {
   // cout << "T:" << type << " one:" << one << " two:" << two;
   if (type.compare("primitive") == 0) {
@@ -261,7 +267,7 @@ bool check_types(string type, string one, string two) {
       return (one.compare(two) == 0);
     }
   } else if (type.compare("") == 0) {
-    return (one.compare(two) == 0);
+    return eq(one, two);
   }
   return (type.compare(one) == 0) && (type.compare(two) == 0);  
 }
