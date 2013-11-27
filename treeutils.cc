@@ -59,6 +59,11 @@ void raise_error(astree* one, astree* two, astree* root) {
     root->offset, one->type.c_str(), two->type.c_str());
 }
 
+void raise_error(astree* one, astree* two, astree* root, string details) {
+  errprintf("Type mismatch at (%d,%d,%d): %s: %s with %s\n", root->filenr, root->linenr, 
+    root->offset, details.c_str(), one->type.c_str(), two->type.c_str());
+}
+
 void raise_error(string type, astree* one, astree* root) {
   errprintf("Type mismatch at (%d,%d,%d): %s used with %s\n", root->filenr, root->linenr, 
     root->offset, type.c_str(), one->type.c_str());
@@ -385,7 +390,7 @@ void type_post_case(astree* root) {
     }
     case VARDECL: {
       if (!check_type(root->children[0]->type, root->children[2]->type)) {
-        raise_error(root->children[0], root->children[2], root->children[1]);
+        raise_error(root->children[0], root->children[2], root->children[1], "improper variable declaration");
       }
       break;
     }
@@ -438,7 +443,7 @@ void type_post_case(astree* root) {
         numArgs = root->children[1]->children.size();
       }
       if (args.size()-1 != numArgs) {
-        raise_error("Function called with incorrect number of args.", root->children[0]);
+        raise_error("Function called with incorrect number of arguments.", root->children[0]);
       }
       
       for(size_t i = 1; i < args.size(); i++) {

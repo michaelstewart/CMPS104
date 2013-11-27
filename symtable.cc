@@ -173,7 +173,7 @@ vector<string> SymbolTable::parseSignature(string sig) {
   size_t left = sig.find_first_of('(');
   if (left == string::npos) {
     // Print error and return empty results if not a function signature
-    errprintf("%s is not a function\n", sig.c_str());
+    errprintf("This %s is not a function\n", sig.c_str());
     return results;
   }
   // Add return type
