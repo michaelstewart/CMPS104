@@ -15,7 +15,7 @@
 
 using namespace std;
 
-bool in_structdef = false;
+TypeTable* in_structdef = NULL;
 
 /* Build TableTraversal */
 
@@ -78,7 +78,6 @@ string stripBrackets(string str) {
 }
 
 void table_pre_case(astree* root) {
-  // cerr << get_yytname(root->symbol) << endl;
   switch(root->symbol) {
     case BLOCK: {
       // printf("%s\n", (*root->children[0]->lexinfo).c_str());
@@ -99,14 +98,15 @@ void table_pre_case(astree* root) {
       break;
     }
     case DECL: {
-      if (in_structdef)
+      if (in_structdef != NULL)
         break;
       // printf("DECL - T: %s N: %s \n", (*root->children[1]->lexinfo).c_str(), (*root->children[0]->children[0]->children[0]->lexinfo).c_str());  
        string type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
         type += "[]";
-      }  
+      }      
+
       current_table->addSymbol(*root->children[1]->lexinfo, type);
       current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
@@ -170,7 +170,7 @@ void table_pre_case(astree* root) {
       break;
     }
     case TOK_STRUCT: {
-      in_structdef = true;
+      in_structdef = type_table->addStruct(*root->children[0]->lexinfo);
       break;
     }
   }
@@ -179,12 +179,11 @@ void table_pre_case(astree* root) {
 void table_post_case(astree* root) {
   switch (root->symbol) {
     case TOK_STRUCT: {
-      in_structdef = false;
-      TypeTable* local_table = type_table->addStruct(*root->children[0]->lexinfo);
       for(size_t i = 0; i < root->children[1]->children.size(); i++) {
-        local_table->addType(*root->children[1]->children[i]->children[1]->lexinfo, root->children[1]->children[i]->children[0]->type);
+        in_structdef->addType(*root->children[1]->children[i]->children[1]->lexinfo, root->children[1]->children[i]->children[0]->type);
         root->children[1]->children[i]->children[1]->type = root->children[1]->children[i]->children[0]->type;
       }
+      in_structdef = NULL;
       break;
     }
     case FUNCTION: {
@@ -417,7 +416,6 @@ void type_post_case(astree* root) {
        if (root->children[1]->symbol == '.') {
           TypeTable* local = type_table->lookupType(root->children[0]->type);
           // lookup that type
-          cerr << "T0:" << root->children[0]->type << " T1:" << *root->children[2]->lexinfo << endl;
           if (local == NULL) {
             raise_error("Type does not exist", root->children[1]);
           } else {
