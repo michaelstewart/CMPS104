@@ -187,9 +187,6 @@ void table_pre_case(astree* root) {
        string type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
-        if (!check_base(root->type)) {
-          // raise_error("Arrays ought to be of type basetype");
-        }
         type += "[]";
       }      
 
@@ -248,8 +245,6 @@ void table_pre_case(astree* root) {
     }
     case CALL: {
       if (root->children[0]->symbol == TOK_IDENT) {
-        // printf("%s\n", current_table->lookup(*root->children[0]->lexinfo).c_str());
-        // root->type = stripBrackets(current_table->lookup(*root->children[0]->lexinfo));
         root->type = current_table->lookup(*root->children[0]->lexinfo);
       }
       break;
@@ -308,7 +303,6 @@ void table_post_case(astree* root) {
 }
 
 void build_table_traversal(astree* root) {
-  // fprintf(stderr, "%s %d\n", root->lexinfo->c_str(), root->symbol);
   table_pre_case(root);
   for(size_t i = 0; i < root->children.size(); i++) {
     build_table_traversal(root->children[i]);
@@ -386,7 +380,6 @@ void type_post_case(astree* root) {
     case ALLOCATOR: {
       if (root->children[0]->children[0]->symbol == TOK_IDENT) {
         // We're looking for a struct
-        // cout << "STRUCT: " << *root->children[0]->children[0]->lexinfo << endl;
         if (type_table->lookupType(*root->children[0]->children[0]->lexinfo) != NULL) {
           root->type = root->children[0]->type;
         }
@@ -481,8 +474,6 @@ void type_post_case(astree* root) {
 }
 
 void type_check_traversal(astree* root) {
-  // fprintf(stderr, "%s %d\n", root->lexinfo->c_str(), root->symbol);
-  // type_pre_case(root);
   for(size_t i = 0; i < root->children.size(); i++) {
     type_check_traversal(root->children[i]);
   }
