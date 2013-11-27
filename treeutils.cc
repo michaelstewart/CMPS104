@@ -69,6 +69,14 @@ void raise_error(string type, astree* root) {
     root->offset, type.c_str());
 }
 
+string stripBrackets(string str) {
+    vector<string> sig = global_table->parseSignature(str);
+    if (sig.size() > 0) {
+      return sig[0];
+    }
+    return string("");
+}
+
 void table_pre_case(astree* root) {
   // cerr << get_yytname(root->symbol) << endl;
   switch(root->symbol) {
@@ -109,6 +117,10 @@ void table_pre_case(astree* root) {
     }
     case FUNCTION: {
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
+      if (root->children[0]->children.size() > 1) {
+        // If it's an array add [] to end
+        return_type += "[]";
+      } 
 
       string parameters = "";
       if (root->children.size() == 4) {
@@ -135,15 +147,13 @@ void table_pre_case(astree* root) {
     case CALL: {
       if (root->children[0]->symbol == TOK_IDENT) {
         // printf("%s\n", current_table->lookup(*root->children[0]->lexinfo).c_str());
+        // root->type = stripBrackets(current_table->lookup(*root->children[0]->lexinfo));
         root->type = current_table->lookup(*root->children[0]->lexinfo);
       }
       break;
     }
     case TOK_RETURN: {
-      vector<string> sig = global_table->parseSignature(current_table->parentFunction(current_table));
-      if (sig.size() > 0) {
-        root->type = sig[0];
-      }      
+      root->type = stripBrackets(current_table->parentFunction(current_table));
       break;
     }
     case TOK_STRUCT: {
@@ -365,18 +375,34 @@ void type_post_case(astree* root) {
       if (root->children.size() == 3) {
         // index into string -> char
         if (root->children[1]->symbol == '[') {
-          if (!check_types("string", root->children[0]->type) || !check_types("int", root->children[2]->type)) {
-            raise_error("Incorrect index into string", root->children[1]);
+          // Either index into string or index into array
+          if (check_type("string", root->children[0]->type)) {
+            // We have an index into a string
+            if (!check_type("int", root->children[2]->type)) {
+              raise_error("Incorrect index into string", root->children[1]);
+            } else {
+              root->type = string("char");
+            } 
           } else {
-            root->type = string("char");
-          }          
+            // We have an index into an array
+            // Strip off the last two chars (should be [])
+            string typeBase = root->children[0]->type.substr(0, root->children[0]->type.length()-2);
+            if (!check_base(typeBase) || !check_type("int", root->children[2]->type)) {
+              raise_error("Incorrect index into array", root->children[1]);
+            } else {
+              root->type = typeBase;
+            }
+          }                   
         }
+        // Access of a structs element
        if (root->children[1]->symbol == '.') {
           TypeTable* local = type_table->lookupType(root->children[0]->type);
+          // lookup that type
           if (local == NULL) {
             raise_error("Type does not exist", root->children[1]);
           } else {
             root->type = local->lookup(*root->children[2]->lexinfo);
+            // lookup the type of the element within the struct that was found
             if (root->type.compare("") == 0) {
               raise_error("Invalid struct element", root->children[1]);
             }
@@ -402,6 +428,7 @@ void type_post_case(astree* root) {
           raise_error("Function called with incorrect argument types.", root->children[0]);
         }
       }
+      root->type = stripBrackets(root->type);
       break;
     }
     case TOK_RETURN: {
