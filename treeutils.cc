@@ -74,6 +74,80 @@ void raise_error(string type, astree* root) {
     root->offset, type.c_str());
 }
 
+void raise_error(string string) {
+  errprintf("%s\n", string.c_str());
+}
+
+/* Type Checking Helpers */
+
+bool check_prim(string type) {
+  if (type.compare("int") == 0 || type.compare("bool") == 0 
+    || type.compare("char") == 0  || type.compare("string") == 0 
+    || type.compare("null") == 0) {
+    return true;
+  }
+  return false;
+}
+
+bool check_prim(string type1, string type2) {
+  return check_prim(type1) && check_prim(type2);
+}
+
+bool check_base(string type) {
+  if (check_prim(type)) {
+    return true;
+  } else if (type_table->lookupType(type) != NULL) {
+    return true;
+  }
+  return false;
+}
+
+bool check_base(string type1, string type2) {
+  return check_base(type1) && check_base(type2);
+}
+
+bool eq(string type1, string type2) {
+  if (type1.compare("null") == 0 || type2.compare("null") == 0)
+    return true;
+  return (type1.compare(type2) == 0);
+}
+
+bool check_types(string type, string one, string two) {
+  // cout << "T:" << type << " one:" << one << " two:" << two;
+  if (type.compare("primitive") == 0) {
+    if (!check_prim(one, two)) {
+      return false;
+    } else {
+      return (one.compare(two) == 0);
+    }
+  } else if (type.compare("basetype") == 0) {
+    if (!check_base(one, two)) {
+      return false;
+    } else {
+      return (one.compare(two) == 0);
+    }
+  } else if (type.compare("") == 0) {
+    return eq(one, two);
+  }
+  return (type.compare(one) == 0) && (type.compare(two) == 0);  
+}
+
+bool check_types(string one, string two) {
+  return check_types("", one, two);
+}
+
+bool check_type(string type, string one) {
+  if (type.compare("primitive") == 0) {
+    return check_prim(one);
+  } else if (type.compare("basetype") == 0) {
+    return check_base(one);
+  } else {
+    return (type.compare(one) == 0);
+  }
+}
+
+/* End Type Checking Helpers */
+
 string stripBrackets(string str) {
     vector<string> sig = global_table->parseSignature(str);
     if (sig.size() > 0) {
@@ -94,10 +168,14 @@ void table_pre_case(astree* root) {
     case VARDECL: {
       // printf("VARDECL - N: %s T: %s \n", (*root->children[1]->lexinfo).c_str(), (root->children[0]->type).c_str());
       string type = *root->children[0]->children[0]->children[0]->lexinfo;
+      if (!check_base(type)) {
+        raise_error("Declarations ought to be of type anytype");
+      }
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
         type += "[]";
       } 
+
       current_table->addSymbol(*root->children[1]->lexinfo, type);
       current_table->addLine(*root->children[1]->lexinfo, root->children[1]->filenr, root->children[1]->linenr, root->children[1]->offset);
       break;
@@ -109,6 +187,9 @@ void table_pre_case(astree* root) {
        string type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
+        if (!check_base(root->type)) {
+          raise_error("Arrays ought to be of type basetype");
+        }
         type += "[]";
       }      
 
@@ -132,6 +213,9 @@ void table_pre_case(astree* root) {
       string return_type = *root->children[0]->children[0]->children[0]->lexinfo;
       if (root->children[0]->children.size() > 1) {
         // If it's an array add [] to end
+        if (!check_base(root->type)) {
+          raise_error("Arrays ought to be of type basetype");
+        }
         return_type += "[]";
       } 
 
@@ -235,78 +319,7 @@ void build_table_traversal(astree* root) {
 
 /* Type Checking Traversal */
 
-/* Type Checking Helpers */
-
-bool check_prim(string type) {
-  if (type.compare("int") == 0 || type.compare("bool") == 0 
-    || type.compare("char") == 0  || type.compare("string") == 0 
-    || type.compare("null") == 0) {
-    return true;
-  }
-  return false;
-}
-
-bool check_prim(string type1, string type2) {
-  return check_prim(type1) && check_prim(type2);
-}
-
-bool check_base(string type) {
-  if (check_prim(type)) {
-    return true;
-  } else if (type_table->lookupType(type) != NULL) {
-    return true;
-  }
-  return false;
-}
-
-bool check_base(string type1, string type2) {
-  return check_base(type1) && check_base(type2);
-}
-
-bool eq(string type1, string type2) {
-  if (type1.compare("null") == 0 || type2.compare("null") == 0)
-    return true;
-  return (type1.compare(type2) == 0);
-}
-
-bool check_types(string type, string one, string two) {
-  // cout << "T:" << type << " one:" << one << " two:" << two;
-  if (type.compare("primitive") == 0) {
-    if (!check_prim(one, two)) {
-      return false;
-    } else {
-      return (one.compare(two) == 0);
-    }
-  } else if (type.compare("basetype") == 0) {
-    if (!check_base(one, two)) {
-      return false;
-    } else {
-      return (one.compare(two) == 0);
-    }
-  } else if (type.compare("") == 0) {
-    return eq(one, two);
-  }
-  return (type.compare(one) == 0) && (type.compare(two) == 0);  
-}
-
-bool check_types(string one, string two) {
-  return check_types("", one, two);
-}
-
-bool check_type(string type, string one) {
-  if (type.compare("primitive") == 0) {
-    return check_prim(one);
-  } else if (type.compare("basetype") == 0) {
-    return check_base(one);
-  } else {
-    return (type.compare(one) == 0);
-  }
-}
-
-/* End Type Checking Helpers */
-
 void type_post_case(astree* root) {
-  
   switch(root->symbol) {
     case BINOP: {
       int sym = root->children[1]->symbol;
