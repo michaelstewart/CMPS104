@@ -17,6 +17,7 @@ using namespace std;
 #include "stringset.h"
 #include "symtable.h"
 #include "typetable.h"
+#include "codeutils.h"
 
 string CPP = "/usr/bin/cpp";
 string yyin_cpp_command;
@@ -142,6 +143,10 @@ int main (int argc, char** argv) {
    
    build_table_traversal(yyparse_astree);
    type_check_traversal(yyparse_astree);
+
+   if (!get_exitstatus()) {
+      run_code_gen(yyparse_astree);
+   }
 
    dump_astree(ast_file, yyparse_astree);
    fclose(ast_file);

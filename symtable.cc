@@ -110,6 +110,7 @@ void SymbolTable::dump(FILE* symfile, int depth) {
   }
 }
 
+
 // Look up name in this and all surrounding blocks and return its type.
 //
 // Returns the empty string "" if variable was not found
