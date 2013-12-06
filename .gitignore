@@ -5,11 +5,13 @@ oc
 *.tok
 *.ast
 *.sym
+*.oil
 *.oc
 *.oh
 *.txt
 *.bak
 *.oc
+*.c
 *.output
 yyparse.*
 yylex.*

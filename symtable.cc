@@ -111,7 +111,7 @@ void SymbolTable::dump(FILE* symfile, int depth) {
   }
 }
 
-void SymbolTable::print_globals(FILE* symfile) {
+void SymbolTable::print_globals(FILE* oilfile) {
   // Create a new iterator for <string,string>
   std::map<string,string>::iterator it;
   // Iterate over all entries in the identifier mapping
@@ -123,7 +123,7 @@ void SymbolTable::print_globals(FILE* symfile) {
     // Print the symbol as "name {blocknumber} type"
     // indented by 3 spaces for each level
     if (type.length() < 2 || type.substr(type.length()-1, 1).compare(")") != 0) {
-      fprintf(symfile, "%s __%s;\n", type.c_str(), name.c_str());
+      fprintf(oilfile, "%s __%s;\n", type.c_str(), name.c_str());
     }
   }
 }

@@ -134,6 +134,9 @@ int main (int argc, char** argv) {
    // sym
    str_path = string(program_name) + ".sym";
    FILE* sym_file = fopen(str_path.c_str(), "w");
+   // oil
+   str_path = string(program_name) + ".oil";
+   FILE* oil_file = fopen(str_path.c_str(), "w");
 
    yyin_cpp_popen(filename);
 
@@ -145,7 +148,7 @@ int main (int argc, char** argv) {
    type_check_traversal(yyparse_astree);
 
    if (!get_exitstatus()) {
-      run_code_gen(yyparse_astree);
+      run_code_gen(yyparse_astree, oil_file);
    }
 
    dump_astree(ast_file, yyparse_astree);
@@ -154,7 +157,7 @@ int main (int argc, char** argv) {
    global_table->dump(sym_file, 0);
    fclose(sym_file);
    
-   DEBUGSTMT ('s', dump_stringset (stderr); );
+   DEBUGSTMT ('s', dump_stringset (stderr););
    yylex_destroy();
    fclose(tok_file);
 

@@ -1,5 +1,8 @@
+#include <iostream>
+using namespace std;
 #include "auxlib.h"
 #include "typetable.h"
+#include "codeutils.h"
 
 TypeTable *type_table = new TypeTable(NULL);
 
@@ -35,6 +38,21 @@ TypeTable* TypeTable::lookupType(string name) {
     return this->children[name];
   }
   return NULL;
+}
+
+void TypeTable::print_types(FILE* oilfile) {
+  std::map<string,TypeTable*>::iterator it;
+  for (it = this->children.begin(); it != this->children.end(); ++it) {
+    string name = it->first;
+    TypeTable* table = it->second;
+    fprintf(oilfile, "struct %s {\n", name.c_str());
+
+    std::map<string,string>::iterator itt;
+    for (itt = table->types.begin(); itt != table->types.end(); ++itt) {
+      fprintf(oilfile, "        %s %s;\n", map_type(itt->second).c_str(), itt->first.c_str());
+    }
+    fprintf(oilfile, "};\n");
+  }
 }
 
 // Look up name in this and all surrounding blocks and return its type.
