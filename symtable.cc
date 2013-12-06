@@ -122,7 +122,7 @@ void SymbolTable::print_globals(FILE* symfile) {
     string type = map_type(it->second);
     // Print the symbol as "name {blocknumber} type"
     // indented by 3 spaces for each level
-    if (type.length() < 3 || type.substr(type.length()-2, 2).compare("()") != 0) {
+    if (type.length() < 2 || type.substr(type.length()-1, 1).compare(")") != 0) {
       fprintf(symfile, "%s __%s;\n", type.c_str(), name.c_str());
     }
   }

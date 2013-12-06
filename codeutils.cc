@@ -16,9 +16,8 @@ using namespace std;
 #include "typetable.h"
 
 int counter = 0;
-
+string indent = "        ";
 stringstream ss;
-int block_level = 0;
 
 char mangle_letter(string type) {
   if (type.compare("int") == 0) {
@@ -34,14 +33,6 @@ string save_in_reg(string code, string type) {
   sprintf (buffer, "%c%d", mangle_letter(type), ++counter);
   ss << type << " " << buffer << " = " << code << ";" << endl;
   return buffer;
-}
-
-string indent() {
-  string s = "";
-  for (int i = 0; i < block_level; i++) {
-    s += "        ";
-  }
-  return s;
 }
 
 string inttostr(int i) {
@@ -76,26 +67,26 @@ string map_type(string type) {
 
 string codegen(astree* root, bool save) {
   string code = "";
+  bool printSave = false;
   switch (root->symbol) {
     case TOK_ROOT: {
       for(size_t i = 0; i < root->children.size(); i++) {
-        cout << codegen(root->children[i]) << ";" << endl;
+        code += indent + codegen(root->children[i]) + ";\n";
       }
       break;
     }
     case DECL:
       // TODO: Check this
-      code = indent() + codegen(root->children[0]);
+      code = codegen(root->children[0]);
       break;
     case TYPE:
-      code = *root->lexinfo;
+      // code = *root->lexinfo;
+      code = root->type;
       break;
     case BLOCK: {
-      block_level++;
       for(size_t i = 0; i < root->children.size(); i++) {
-        code += indent() + codegen(root->children[i]) + ";\n";
+        code += indent + codegen(root->children[i]) + ";\n";
       }
-      block_level--;
       break;
     }
     case IFELSE: {
@@ -106,33 +97,61 @@ string codegen(astree* root, bool save) {
       code += codegen(root->children[1]);
       if (root->children.size() > 2) {
         code += "\n";
-        code += indent() + "else_" + num + ":;\n";
+        code += "else_" + num + ":;\n";
         code += codegen(root->children[2]);
       }
-      code += indent() + "fi_" + num + ":";
+      code += "fi_" + num + ":";
       break;
     }
     case WHILE: {
       string num = inttostr(++counter);
-      code += "while_" + num + ":;\n";
-      code += indent() + "if (!" + codegen(root->children[0], true) + ") goto break_" + num + ";\n";
+      code += "\nwhile_" + num + ":;\n";
+      code += indent + "if (!" + codegen(root->children[0], true) + ") goto break_" + num + ";\n";
       code += codegen(root->children[1]);
-      code += indent() + "goto while_" + num + ";\n";
-      code += indent() + "break_" + num + ":";
+      code += indent + "goto while_" + num + ";\n";
+      code += "break_" + num + ":";
       break;
     }
     case FUNCTION: {
       string type = map_type(root->children[0]->type);
       string name = mangle_name(*root->children[1]->lexinfo);
-      string block = codegen(root->children[2], false);
-      code = type + "\n" + name + " {\n" + block + "}\n";
+      string params = "(";
+      if (root->children.size() > 3) {
+        for (size_t i = 0; i < root->children[2]->children.size(); i++) {
+          if (i) params += ", ";
+          params += codegen(root->children[2]->children[i]);
+        }
+      }
+      params += ")";
+      int lastChld = root->children.size()-1;
+      string block = codegen(root->children[lastChld], false);
+      code = "\n" + type + "\n" + name + params + "\n{\n" + block + "}\n";
+      break;
+    }
+    case CALL: {
+      code += mangle_name(*root->children[0]->lexinfo);
+      code += "(";
+      if (root->children.size() > 1) {
+        for (size_t i = 0; i < root->children[1]->children.size(); i++) {
+          if (i) code += ", ";
+          code += codegen(root->children[1]->children[i]);
+        }
+      }
+      code += ")";        
       break;
     }
     case BINOP: {
-      string left = codegen(root->children[0], false);
-      string right = codegen(root->children[2], false);
+      string left = codegen(root->children[0], true);
+      string right = codegen(root->children[2], true);
       string op = *root->children[1]->lexinfo;
       code = left + " " + op + " " + right;
+      printSave = true;
+      break;
+    }
+    case UNOP: {
+      string op = *root->children[0]->lexinfo;
+      string right = codegen(root->children[1], false);
+      code = op + right;
       break;
     }
     case VARIABLE: {
@@ -153,8 +172,10 @@ string codegen(astree* root, bool save) {
     case VARDECL: {
       string type = map_type(root->children[0]->type);
       string left = codegen(root->children[1]);
-      string right = codegen(root->children[2], false);
+      string right = codegen(root->children[2], true);
+      printSave = true;
       code = type + " " + left + " = " + right;
+
       break;
     }
     case TOK_IDENT:
@@ -181,10 +202,18 @@ string codegen(astree* root, bool save) {
 
   }
   // code = string(get_yytname(root->symbol)) + ":" + code;
-  cout << ss.str();  
+  // cout << ss.str();  
   // code = ss.str() + code;
-  ss.str("");
-  return save ? save_in_reg(code, map_type(root->type)) : code;
+  // ss.str("");
+  // code = "|" + code + "|";
+  if (save) {
+    code  = save_in_reg(code, map_type(root->type));
+  } 
+  if (printSave) {
+    code = ss.str() + code;
+    ss.str("");
+  }
+  return code;
 }
 
 string codegen(astree* root) {
@@ -207,6 +236,6 @@ void run_code_gen(astree* yyparse_astree) {
   print_section_break();
   print_globals();
   print_section_break();
-  codegen(yyparse_astree);
+  cout << codegen(yyparse_astree);
 }
 
