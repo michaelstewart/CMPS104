@@ -1,5 +1,6 @@
 #include "auxlib.h"
 #include "symtable.h"
+#include "codeutils.h"
 #include <iostream>
 
 SymbolTable *global_table = new SymbolTable(NULL);
@@ -110,6 +111,22 @@ void SymbolTable::dump(FILE* symfile, int depth) {
   }
 }
 
+void SymbolTable::print_globals(FILE* symfile) {
+  // Create a new iterator for <string,string>
+  std::map<string,string>::iterator it;
+  // Iterate over all entries in the identifier mapping
+  for (it = this->mapping.begin(); it != this->mapping.end(); ++it) {
+    // The key of the mapping entry is the name of the symbol
+    string name = it->first;
+    // The value of the mapping entry is the type of the symbol
+    string type = map_type(it->second);
+    // Print the symbol as "name {blocknumber} type"
+    // indented by 3 spaces for each level
+    if (type.length() < 3 || type.substr(type.length()-2, 2).compare("()") != 0) {
+      fprintf(symfile, "%s __%s;\n", type.c_str(), name.c_str());
+    }
+  }
+}
 
 // Look up name in this and all surrounding blocks and return its type.
 //
@@ -130,6 +147,22 @@ string SymbolTable::lookup(string name) {
     errprintf("Unknown identifier: %s\n", name.c_str());
     return "";
   }
+}
+
+int SymbolTable::lookupBlock(string name) {
+  // Look up "name" in the identifier mapping of the current block
+  if (this->mapping.count(name) > 0) {
+    // If we found an entry, just return its type
+    return this->number;
+  }
+
+  std::map<string,SymbolTable*>::iterator it;
+  for (it = this->subscopes.begin(); it != this->subscopes.end(); ++it) {
+    int b = it->second->lookupBlock(name);
+    if (b > 0)
+      return b;
+  }
+  return -1;
 }
 
 // Looks through the symbol table chain to find the function which

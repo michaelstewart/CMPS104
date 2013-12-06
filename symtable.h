@@ -68,10 +68,14 @@ public:
   // Example: "global_symtable->dump(symfile, 0)"
   void dump(FILE* symfile, int depth);
 
+  void print_globals(FILE* symfile);
+
   // Look up name in this and all surrounding blocks and return its type.
   //
   // Returns the empty string "" if variable was not found
   string lookup(string name);
+
+  int lookupBlock(string name);
 
   // Looks through the symbol table chain to find the function which
   // surrounds the scope and returns its signature

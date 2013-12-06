@@ -12,6 +12,7 @@ using namespace std;
 string save_in_reg(string code);
 string codegen(astree* root, bool save);
 string codegen(astree* root);
+string map_type(string type);
 void run_code_gen(astree* yyparse_astree);
 
 extern int counter;
