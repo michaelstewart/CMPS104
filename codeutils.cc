@@ -17,7 +17,7 @@ using namespace std;
 
 int counter = 0;
 string indent = "        ";
-vector<string> reg_vector;
+map<int, string> reg_map;
 
 char mangle_letter(string type) {
   if (type.compare("int") == 0) {
@@ -34,28 +34,25 @@ string inttostr(int i) {
   return ss.str();
 }
 
-string save_in_reg(string code, string type, size_t depth) {
+string save_in_reg(string code, string type, int depth) {
   char buffer[10];
   sprintf (buffer, "%c%d", mangle_letter(type), ++counter);
   string s = indent + type + " " + buffer + " = " + code + ";\n";
-  if (reg_vector.size() >= depth) {
-    // Add to string
-    reg_vector[depth-1] += s;
-  } else {
-    // Make new string
-    reg_vector.push_back(s);
+  if (reg_map.count(depth) == 0) {
+    reg_map[depth] = "";
   }
+  reg_map[depth] += s;
   return buffer;
 }
 
 string get_regs() {
   string s = "";
-  for (size_t i = reg_vector.size(); i > 0; i--) {
-    // s += "[" + inttostr(i);
-    s += reg_vector[i-1];
-    // s += inttostr(i) + "]";
+  for( map<int, string>::reverse_iterator it=reg_map.rbegin(); it!=reg_map.rend(); ++it ) {
+    // s += "[" + inttostr(it->first);
+    s += it->second;
+    // s += inttostr(it->first) + "]";
   }
-  reg_vector.clear();
+  reg_map.clear();
   return s;
 }
 
@@ -218,11 +215,6 @@ string codegen(astree* root, bool save, int depth) {
       break;
   }
 
-  // code = string(get_yytname(root->symbol)) + ":" + code;
-  // cout << ss.str();  
-  // code = ss.str() + code;
-  // ss.str("");
-  // code = "|" + code + "|";
   if (save) {
     code  = save_in_reg(code, map_type(root->type), depth);
   }
@@ -248,6 +240,15 @@ void print_globals(FILE* oil_file) {
   global_table->print_globals(oil_file);
 }
 
+void print_main(FILE* oil_file) {
+  fprintf(oil_file, "void __ocmain() {\n");
+}
+
+void print_main_end(FILE* oil_file) {
+  fprintf(oil_file, "}\n");
+}
+
+
 void run_code_gen(astree* yyparse_astree, FILE* oil_file) {
   print_preamble(oil_file);
   print_section_break(oil_file);
@@ -256,6 +257,8 @@ void run_code_gen(astree* yyparse_astree, FILE* oil_file) {
   print_globals(oil_file);
   print_section_break(oil_file);
   string out = codegen(yyparse_astree, false, 0);
+  print_main(oil_file);
   fprintf(oil_file, "%s", out.c_str());
+  print_main_end(oil_file);
 }
 
