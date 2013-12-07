@@ -17,6 +17,8 @@ using namespace std;
 
 int counter = 0;
 string indent = "        ";
+string functions = "";
+bool inAssignment = false;
 map<int, string> reg_map;
 
 char mangle_letter(string type) {
@@ -75,9 +77,18 @@ string map_type(string type) {
       return "int";
     } else if (type.compare("string") == 0) {
       return "ubyte*";
+    } else if (type.compare("null") == 0) {
+      return "void!";
     }
   }
   return type;
+}
+
+string clearRegs(string code, int depth) {
+  if (depth == 0) {
+    return get_regs() + code;
+  }
+  return code;
 }
 
 string codegen(astree* root, bool save, int depth) {
@@ -87,13 +98,20 @@ string codegen(astree* root, bool save, int depth) {
   switch (root->symbol) {
     case TOK_ROOT: {
       for(size_t i = 0; i < root->children.size(); i++) {
-        code += codegen(root->children[i], false, depth) + ";\n";
+        string s = codegen(root->children[i], false, depth);
+        if (!s.length())
+          continue;
+        code += s + ";\n";
       }
       break;
     }
     case DECL:
       // TODO: Check this
-      code = codegen(root->children[0], false, depth);
+      code = map_type(codegen(root->children[0], false, depth));
+      if (root->children.size() > 1) {
+        code += " " + codegen(root->children[1], false, depth);
+      }
+
       break;
     case TYPE:
       // code = *root->lexinfo;
@@ -106,14 +124,15 @@ string codegen(astree* root, bool save, int depth) {
       break;
     }
     case IFELSE: {
+      cout << "D:" << depth << endl;
       string num = inttostr(++counter);
-      code += "if (!" + codegen(root->children[0], true, depth) + ") goto ";
-      code += (root->children.size() > 2) ? "else" : "fi";
-      code += "_" + num + ";\n";
+      code += indent + "if (!" + codegen(root->children[0], true, depth) + ") goto else_" + num + ";\n";
+      code = clearRegs(code, depth);
       code += codegen(root->children[1], false, depth);
-      if (root->children.size() > 2) {
-        code += "\n";
-        code += "else_" + num + ":;\n";
+      code += indent + "goto fi_" + num + ";\n";
+      code += "else_" + num + ":;\n";
+      if (root->children.size() > 2) {        
+        code = clearRegs(code, depth);
         code += codegen(root->children[2], false, depth);
       }
       code += "fi_" + num + ":";
@@ -121,14 +140,17 @@ string codegen(astree* root, bool save, int depth) {
     }
     case WHILE: {
       string num = inttostr(++counter);
-      code += "\nwhile_" + num + ":;\n";
       code += indent + "if (!" + codegen(root->children[0], true, depth) + ") goto break_" + num + ";\n";
+      code = clearRegs(code, depth);      
       code += codegen(root->children[1], false, depth);
       code += indent + "goto while_" + num + ";\n";
       code += "break_" + num + ":";
+      code = "\nwhile_" + num + ":;\n" + code;
       break;
     }
     case FUNCTION: {
+      if (root->children[root->children.size()-1]->symbol != BLOCK)
+        break;
       string type = map_type(root->children[0]->type);
       string name = mangle_name(*root->children[1]->lexinfo);
       string params = "(";
@@ -141,7 +163,7 @@ string codegen(astree* root, bool save, int depth) {
       params += ")";
       int lastChld = root->children.size()-1;
       string block = codegen(root->children[lastChld], false, depth);
-      code = "\n" + type + "\n" + name + params + "\n{\n" + block + "}\n";
+      functions += "\n" + type + "\n" + name + params + "\n{\n" + block + "}\n";
       break;
     }
     case CALL: {
@@ -150,16 +172,17 @@ string codegen(astree* root, bool save, int depth) {
       if (root->children.size() > 1) {
         for (size_t i = 0; i < root->children[1]->children.size(); i++) {
           if (i) code += ", ";
-          code += codegen(root->children[1]->children[i], false, depth);
+          code += codegen(root->children[1]->children[i], false, depth+1);
         }
       }
       code += ")";        
       break;
     }
     case BINOP: {
-      string left = codegen(root->children[0], true, depth);
-      string right = codegen(root->children[2], true, depth);
       string op = *root->children[1]->lexinfo;
+      inAssignment = (op.compare("=") == 0);
+      string left = codegen(root->children[0], !inAssignment, depth);
+      string right = codegen(root->children[2], true, depth);
       code = left + " " + op + " " + right;
       break;
     }
@@ -170,7 +193,7 @@ string codegen(astree* root, bool save, int depth) {
       break;
     }
     case VARIABLE: {
-      code = codegen(root->children[0], true, depth);
+      code = codegen(root->children[0], !inAssignment, depth);
       if (root->children.size() > 1) {
         if (root->children[1]->symbol == '[') {
           code += "[" + codegen(root->children[2], true, depth) + "]";
@@ -178,6 +201,7 @@ string codegen(astree* root, bool save, int depth) {
           code += "[" + codegen(root->children[2], true, depth) + "]"; // FIX THIS
         }
       }
+      inAssignment = false;
       break;
     }
     case CONSTANT: {
@@ -189,7 +213,6 @@ string codegen(astree* root, bool save, int depth) {
       string left = codegen(root->children[1], false, depth);
       string right = codegen(root->children[2], true, depth);
       code = indent + type + " " + left + " = " + right;
-
       break;
     }
     case TOK_IDENT:
@@ -211,6 +234,7 @@ string codegen(astree* root, bool save, int depth) {
       code = "1";
       break;
     case TOK_NULL:
+      cout << "TOK_NULL" << endl;
       code = "0";
       break;
   }
@@ -218,9 +242,7 @@ string codegen(astree* root, bool save, int depth) {
   if (save) {
     code  = save_in_reg(code, map_type(root->type), depth);
   }
-  if (depth == 0) {
-    code = get_regs() + code;
-  }
+  code = clearRegs(code, depth);
 
   return code;
 }
@@ -230,14 +252,22 @@ void print_section_break(FILE* oil_file) {
 }
 void print_preamble(FILE* oil_file) {
   fprintf(oil_file, "#define __OCLIB_C__\n#include \"oclib.oh\"\n");
+  print_section_break(oil_file);
 }
 
 void print_structs(FILE* oil_file) {
   type_table->print_types(oil_file);
+  print_section_break(oil_file);
 }
 
 void print_globals(FILE* oil_file) {
   global_table->print_globals(oil_file);
+  print_section_break(oil_file);
+}
+
+void print_functions(FILE* oil_file) {
+  fprintf(oil_file, "%s", functions.c_str());
+  print_section_break(oil_file);
 }
 
 void print_main(FILE* oil_file) {
@@ -250,13 +280,13 @@ void print_main_end(FILE* oil_file) {
 
 
 void run_code_gen(astree* yyparse_astree, FILE* oil_file) {
-  print_preamble(oil_file);
-  print_section_break(oil_file);
-  print_structs(oil_file);
-  print_section_break(oil_file);
-  print_globals(oil_file);
-  print_section_break(oil_file);
+  // Generate Code
   string out = codegen(yyparse_astree, false, 0);
+
+  print_preamble(oil_file);
+  print_structs(oil_file);
+  print_globals(oil_file);
+  print_functions(oil_file);
   print_main(oil_file);
   fprintf(oil_file, "%s", out.c_str());
   print_main_end(oil_file);
