@@ -111,6 +111,26 @@ void SymbolTable::dump(FILE* symfile, int depth) {
   }
 }
 
+string SymbolTable::map_function_types(string typeList) {
+  size_t p = typeList.find("(");
+  if (p == string::npos)
+    return map_type(typeList);
+  string returnList = map_type(typeList.substr(0, p)) + "(";
+  typeList.erase(0, p+1);
+  while (typeList.length() > 1) {
+    p = typeList.find(",");
+    bool comma = true;
+    if (p == string::npos) {// There are no more commas
+      p = typeList.length() - 1; // Set to everthing but the final ')'
+      comma = false;
+    }
+    returnList += map_type(typeList.substr(0, p));
+    returnList += comma ? "," : "";
+    typeList.erase(0, p+1);
+  }
+  return returnList + ")";
+}
+
 void SymbolTable::print_globals(FILE* oilfile) {
   // Create a new iterator for <string,string>
   std::map<string,string>::iterator it;
@@ -119,7 +139,7 @@ void SymbolTable::print_globals(FILE* oilfile) {
     // The key of the mapping entry is the name of the symbol
     string name = it->first;
     // The value of the mapping entry is the type of the symbol
-    string type = map_type(it->second);
+    string type = this->map_function_types(it->second);
     // Print the symbol as "name {blocknumber} type"
     // indented by 3 spaces for each level
     if (type.length() < 2 || type.substr(type.length()-1, 1).compare(")") != 0) {

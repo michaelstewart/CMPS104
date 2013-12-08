@@ -68,6 +68,7 @@ public:
   // Example: "global_symtable->dump(symfile, 0)"
   void dump(FILE* symfile, int depth);
 
+  string map_function_types(string typeList);
   void print_globals(FILE* symfile);
 
   // Look up name in this and all surrounding blocks and return its type.
