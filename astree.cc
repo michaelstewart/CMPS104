@@ -101,7 +101,7 @@ static void dump_astree_rec (FILE* outfile, astree* root,
     root->lexinfo->c_str());
   else
     fprintf (outfile, "%*s%s (%s)\n", depth * 3, "",
-    get_yytname (root->symbol), root->lexinfo->c_str(), root->type.c_str());
+    get_yytname (root->symbol), root->lexinfo->c_str());
    for (size_t child = 0; child < root->children.size();
         ++child) {
       dump_astree_rec (outfile, root->children[child],
