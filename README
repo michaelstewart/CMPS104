@@ -10,3 +10,4 @@ Output:
 2. List of tokens to program.tok
 3. Abstract syntax tree to program.ast
 4. Symbol table to program.sym
+5. Generate an intermediate language ﬁle called program.oil
