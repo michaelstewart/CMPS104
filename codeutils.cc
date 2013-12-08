@@ -84,7 +84,6 @@ string map_type(string type) {
       return "void";
     }
   }
-  cout << "HERE:" << "struct " + type + " *" << endl;
   return "struct " + type + " *";
 }
 

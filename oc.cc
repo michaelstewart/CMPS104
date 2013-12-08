@@ -151,7 +151,6 @@ int main (int argc, char** argv) {
       run_code_gen(yyparse_astree, oil_file);
       fclose(oil_file);
       string call =  "gcc -g -o " + string(program_name) + " -x c " + string(program_name) + ".oil oclib.c";
-      cout << call << endl;
       system(call.c_str());
    }
 
