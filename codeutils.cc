@@ -160,7 +160,8 @@ string codegen(astree* root, bool save, int depth) {
       break;
     }
     case FUNCTION: {
-      if (root->children[root->children.size()-1]->symbol != BLOCK)
+      if (root->children[root->children.size()-1]->symbol != BLOCK
+          || root->children[root->children.size()-1]->children.size() == 0)
         break;
       string type = map_type(root->children[0]->type);
       string name = mangle_name(*root->children[1]->lexinfo);
@@ -213,6 +214,10 @@ string codegen(astree* root, bool save, int depth) {
         size = codegen(root->children[1]->children[0], false, depth);
       }
       code += "xcalloc(" + size + ", sizeof(" + map_type(root->type) + "))";
+      break;
+    }
+    case TOK_RETURN: {
+      code = "return " + codegen(root->children[0], false, depth+1);
       break;
     }
     case VARIABLE: {
