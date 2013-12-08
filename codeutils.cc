@@ -217,7 +217,9 @@ string codegen(astree* root, bool save, int depth) {
       break;
     }
     case TOK_RETURN: {
-      code = "return " + codegen(root->children[0], false, depth+1);
+      code = "return ";
+      if (root->children.size() > 0)
+        code += codegen(root->children[0], false, depth+1);
       break;
     }
     case VARIABLE: {
